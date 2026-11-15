@@ -1,14 +1,14 @@
-# Vocal Rider K 1.2.1 — Auditoría
+# Vocal Rider K 1.2.2 — Auditoría
 
 Versión Windows x64 con RANGE simétrico, SENSITIVITY y sidechain musical opcional sin controles nuevos en la skin. Sin sidechain, FIX busca 0 dB K. Se conservan SAFE y las escalas impresas; no hay TRIM.
 
 ## Compilación e instalación
 
-Release MSVC x64: VST3 y Standalone compilados correctamente. SHA-256 del binario VST3 incluido en el paquete: `32fdc180fc6561b8c87e358ca84d04ab2cef7478c562f3306e9d2232aeddbe6e`.
+Release MSVC x64: VST3 y Standalone compilados correctamente. Instalado en C:/Program Files/Common Files/VST3/Vocal Rider K.vst3. SHA-256 del binario instalado idéntico al del paquete: `2dd78dd36802af35ddec6b3b1bd5acefe35a3eba232597f0943fc37434af9ebe`.
 
 ## Pluginval
 
-pluginval 1.0.4, nivel de exigencia 10, semilla 121441, ejecutado sobre el VST3 incluido en el paquete de la versión 1.2.1: **SUCCESS, salida 0**. Sin excluir pruebas de GUI. Tasas 44100/48000/96000 Hz y bloques 64/128/256/512/1024. Incluye automatización y fuzzing de parámetros. Log íntegro en pluginval-level10.txt.
+pluginval 1.0.4, nivel de exigencia 10, semilla 121442, ejecutado sobre la copia instalada en Common Files/VST3 de la versión 1.2.2: **SUCCESS, salida 0**. Sin excluir pruebas de GUI. Tasas 44100/48000/96000 Hz y bloques 64/128/256/512/1024. Incluye automatización y fuzzing de parámetros. Log íntegro en pluginval-level10.txt.
 
 ## Audio
 
@@ -23,6 +23,14 @@ SAFE: detector FIR 8x de 65 taps, ganancia enlazada, anticipación de 3 ms más 
 Pruebas aprobadas para rango simétrico y rango cero, sensibilidad baja con tolerancia de ±3 dB, sensibilidad alta con cero K exacto y migración de estados antiguos. La sensibilidad no modifica el tiempo RIDE.
 
 Bus auxiliar mono/estéreo opcional probado: aprendizaje inicial, seguimiento de +4/−4 dB del instrumental, vuelta al cero K ante silencio/desconexión, sin latencia extra y sin sobrescribir las muestras del bus auxiliar. El seguimiento queda limitado a ±6 dB alrededor del cero K. El objetivo depende del instrumental cuando está conectado. No se ha comprobado el enrutado dentro de una sesión real de FL Studio.
+
+## Entrada numérica 1.2.2
+
+Doble clic en los valores bajo las perillas para editarlos. Enter aplica y Escape cancela. Se admiten coma decimal y unidades. Los valores se limitan al rango válido; texto no numérico y valores no finitos se descartan. K SYSTEM acepta K-12, K-14 y K-20.
+
+## Escalado 1.2.2
+
+Mismos límites que FET 67: 817 × 126 px hasta 4085 × 630 px, con proporción fija. Siempre abre al mínimo. Captura inicial en Preview-Min.png.
 
 ## Cambio visual 1.2.1
 

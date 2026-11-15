@@ -36,6 +36,18 @@ int main(){juce::ScopedJuceInitialiser_GUI gui;try{
         check(p.apvts.getRawParameterValue("range")->load()==4&&p.apvts.getRawParameterValue("sensitivity")->load()==100,"old boost/cut state migrates to conservative symmetric range");}
     sidechainTests();
     safeTests();
-    {RiderProcessor p;std::unique_ptr<juce::AudioProcessorEditor> e(p.createEditor());e->setSize(1634,252);auto img=e->createComponentSnapshot(e->getLocalBounds());juce::File f=juce::File::getCurrentWorkingDirectory().getChildFile("Preview.png");f.deleteFile();juce::FileOutputStream out(f);juce::PNGImageFormat png;png.writeImageToStream(img,out);}
+    {RiderProcessor p;std::unique_ptr<juce::AudioProcessorEditor> e(p.createEditor());auto* face=e->getChildComponent(0);std::vector<juce::Label*> fields;
+        for(int i=0;i<face->getNumChildComponents();++i)if(auto* label=dynamic_cast<juce::Label*>(face->getChildComponent(i)))fields.push_back(label);
+        check(fields.size()==5,"five editable numeric readouts");
+        auto type=[&](size_t i,const juce::String& value,bool cancel=false){fields[i]->showEditor();auto* editor=fields[i]->getCurrentTextEditor();if(!editor)throw std::runtime_error("numeric editor unavailable");editor->setText(value,false);fields[i]->hideEditor(cancel);};
+        type(0,"9,5");check(p.apvts.getRawParameterValue("range")->load()==9.5f,"numeric entry accepts decimal comma");
+        type(0,"99");check(p.apvts.getRawParameterValue("range")->load()==24,"numeric entry clamps to range");
+        type(0,"invalid");check(p.apvts.getRawParameterValue("range")->load()==24,"invalid numeric input preserves value");
+        type(0,"nan");check(p.apvts.getRawParameterValue("range")->load()==24,"nonfinite numeric input rejected");
+        type(0,"5",true);check(p.apvts.getRawParameterValue("range")->load()==24,"cancel preserves original numeric value");
+        type(1,"50%");type(2,"450ms");type(3,"-62dBFS");type(4,"K-20");
+        check(p.apvts.getRawParameterValue("sensitivity")->load()==50&&p.apvts.getRawParameterValue("speed")->load()==450&&p.apvts.getRawParameterValue("gate")->load()==-62&&p.apvts.getRawParameterValue("kmode")->load()==2,"typed values update all remaining parameters");
+        e->setSize(1634,252);e.reset();e.reset(p.createEditor());check(e->getWidth()==817&&e->getHeight()==126,"editor reopens at minimum after enlargement");}
+    {RiderProcessor p;std::unique_ptr<juce::AudioProcessorEditor> e(p.createEditor());std::cout<<"Editor opening size: "<<e->getWidth()<<" x "<<e->getHeight()<<std::endl;{auto minimum=e->createComponentSnapshot(e->getLocalBounds());auto f=juce::File::getCurrentWorkingDirectory().getChildFile("Preview-Min.png");f.deleteFile();juce::FileOutputStream stream(f);juce::PNGImageFormat png;png.writeImageToStream(minimum,stream);}e->setSize(1634,252);auto img=e->createComponentSnapshot(e->getLocalBounds());juce::File f=juce::File::getCurrentWorkingDirectory().getChildFile("Preview.png");f.deleteFile();juce::FileOutputStream out(f);juce::PNGImageFormat png;png.writeImageToStream(img,out);}
     std::cout<<"ALL DSP TESTS PASSED"<<std::endl;return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<std::endl;return 1;}}

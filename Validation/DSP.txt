@@ -30,4 +30,13 @@ PASS fixed lookahead latency reported to host
 PASS SAFE off preserves original sample
 PASS SAFE off timing matches host compensation
 PASS SAFE off does not limit peaks
+PASS five editable numeric readouts
+PASS numeric entry accepts decimal comma
+PASS numeric entry clamps to range
+PASS invalid numeric input preserves value
+PASS nonfinite numeric input rejected
+PASS cancel preserves original numeric value
+PASS typed values update all remaining parameters
+PASS editor reopens at minimum after enlargement
+Editor opening size: 817 x 126
 ALL DSP TESTS PASSED

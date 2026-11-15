@@ -1,14 +1,14 @@
-Started validating: C:\Users\anton\Documents\Codex\2026-11-15\en-2\outputs\Vocal-Rider-K\Binaries\Vocal Rider K.vst3
-Random seed: 0x1da61
+Started validating: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
+Random seed: 0x1da62
 Validation started
 Strictness level: 10
 -----------------------------------------------------------------
-Starting tests in: pluginval / Scan for plugins located in: C:\Users\anton\Documents\Codex\2026-11-15\en-2\outputs\Vocal-Rider-K\Binaries\Vocal Rider K.vst3...
+Starting tests in: pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3...
 Num plugins found: 1
 
-Testing plugin: VST3-Vocal Rider K-90b008eb-60871972
-Papielguapo: Vocal Rider K v1.2.1
-Completed tests in pluginval / Scan for plugins located in: C:\Users\anton\Documents\Codex\2026-11-15\en-2\outputs\Vocal-Rider-K\Binaries\Vocal Rider K.vst3
+Testing plugin: VST3-Vocal Rider K-41be935c-60871972
+Papielguapo: Vocal Rider K v1.2.2
+Completed tests in pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
 -----------------------------------------------------------------
 Starting tests in: pluginval / Open plugin (cold)...
 Completed tests in pluginval / Open plugin (cold)

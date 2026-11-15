@@ -1,4 +1,4 @@
-# Vocal Rider K 1.2.1 — Windows x64
+# Vocal Rider K 1.2.2 — Windows x64
 
 ![Interfaz de Vocal Rider K](Preview.png)
 
@@ -10,7 +10,13 @@ Vocal rider independiente con la estética de VCA SSL: aluminio cepillado, mando
 
 Cierra el DAW. Copia la carpeta completa `Binaries/Vocal Rider K.vst3` a `C:\Program Files\Common Files\VST3\` y vuelve a escanear plugins. No copies únicamente el archivo interior. No reemplaza VCA SSL. `Vocal Rider K.exe` permite usarlo sin DAW; selecciona tu dispositivo en sus ajustes de audio.
 
-## Novedades 1.2.1
+## Novedades 1.2.2
+
+Doble clic en el valor numérico bajo una perilla para escribirlo. Enter aplica; Escape cancela. Admite coma decimal y unidades (dB, %, ms, dBFS); los valores se limitan al rango permitido. Para K SYSTEM, escribe K-12, K-14 o K-20 (también 12, 14 o 20). El doble clic sobre el mando sigue restableciendo su valor inicial.
+
+
+Escalado idéntico a FET 67: mínimo 817 × 126 px y máximo 4085 × 630 px, con proporción fija. Al abrir/reabrir el editor, siempre inicia en 817 × 126 px, aunque antes se hubiera ampliado. Arrastra la esquina inferior derecha para cambiar su tamaño.
+
 
 SAFE y FIX intercambian posiciones. SAFE queda a la izquierda del selector RIDE/OUT con LED morado lateral y aro morado, siguiendo la referencia visual. FIX queda a la derecha. Cambio visual: el DSP y los IDs de automatización de ambos botones se conservan.
 

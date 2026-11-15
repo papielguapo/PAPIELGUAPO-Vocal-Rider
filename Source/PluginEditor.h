@@ -24,6 +24,7 @@ private:
     RiderProcessor& processor;
     RiderLookAndFeel look;
     std::array<juce::Slider,5> knobs;
+    std::array<juce::Label,5> values;
     std::array<juce::ToggleButton,4> switches;
     using SA = juce::AudioProcessorValueTreeState::SliderAttachment;
     using BA = juce::AudioProcessorValueTreeState::ButtonAttachment;

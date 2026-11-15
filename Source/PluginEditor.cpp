@@ -1,5 +1,6 @@
 #include "PluginEditor.h"
 #include <cmath>
+#include <cstdlib>
 
 namespace
 {
@@ -118,7 +119,28 @@ FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
         if(i==0)s.setTooltip("RANGE: maximum boost and cut, symmetrically. 6 dB means -6 to +6 dB.");
         if(i==1)s.setTooltip("SENSITIVITY: 100% seeks exact 0 dB K; 0% allows +/-3 dB around zero K. RIDE controls speed.");
         if(i==4){s.textFromValueFunction=[](double v){const char* labels[]{"K-12","K-14","K-20"};return juce::String(labels[juce::jlimit(0,2,juce::roundToInt(v))]);};s.setTooltip("Automatic target: 0 dB K. Select K-12, K-14 or K-20.");}
-        knobAttachments[i]=std::make_unique<SA>(processor.apvts,ids[i],s);}
+        knobAttachments[i]=std::make_unique<SA>(processor.apvts,ids[i],s);
+        auto& value=values[i];addAndMakeVisible(value);value.setName(juce::String(names[i])+" value");
+        value.setJustificationType(juce::Justification::centred);value.setFont(font("Arial",12,juce::Font::bold));
+        value.setBorderSize(juce::BorderSize<int>(0));value.setEditable(false,true,false);
+        value.setColour(juce::Label::textColourId,colour(0xff171c1f));
+        value.setColour(juce::Label::backgroundColourId,juce::Colours::transparentBlack);
+        value.setColour(juce::Label::textWhenEditingColourId,colour(0xff171c1f));
+        value.setColour(juce::Label::backgroundWhenEditingColourId,colour(0xfff4eaff));
+        value.setColour(juce::Label::outlineWhenEditingColourId,colour(0xff9c43d9));
+        value.setTooltip(i==4?"Double-click and enter K-12, K-14 or K-20. Enter applies; Escape cancels.":"Double-click to type a value. Enter applies; Escape cancels. Values are limited to the knob range.");
+        value.setText(s.getTextFromValue(s.getValue()),juce::dontSendNotification);
+        value.onEditorShow=[this,i]{if(auto* editor=values[i].getCurrentTextEditor())editor->selectAll();};
+        value.onTextChange=[this,i,parameter=processor.apvts.getParameter(ids[i])]{
+            const auto original=knobs[i].getValue();double parsed=original;bool valid=false;
+            auto input=values[i].getText().trim().replace(",",".");
+            if(i==4){input=input.toUpperCase().removeCharacters("K- ");if(input=="12"){parsed=0;valid=true;}else if(input=="14"){parsed=1;valid=true;}else if(input=="20"){parsed=2;valid=true;}}
+            else{input=input.toLowerCase();if(i==0)input=input.replace("db","");if(i==1)input=input.replace("%","");if(i==2)input=input.replace("ms","");if(i==3)input=input.replace("dbfs","");input=input.trim();
+                char* end=nullptr;parsed=std::strtod(input.toRawUTF8(),&end);valid=!input.isEmpty()&&end&&*end=='\0'&&std::isfinite(parsed);}
+            if(valid){knobs[i].setValue(parsed,juce::dontSendNotification);parameter->beginChangeGesture();parameter->setValueNotifyingHost(parameter->convertTo0to1(static_cast<float>(knobs[i].getValue())));parameter->endChangeGesture();}
+            values[i].setText(knobs[i].getTextFromValue(knobs[i].getValue()),juce::dontSendNotification);
+        };
+    }
     const char* switchIds[]{"power","meterMode","fix","safe"};
     for(size_t i=0;i<switches.size();++i){auto& b=switches[i];addAndMakeVisible(b);b.setName(switchIds[i]);if(i==2)b.setTooltip("FIX: automatically ride the voice to 0 dB K. Off: no rider gain.");if(i==3)b.setTooltip("SAFE: 8x true-peak estimation, -1 dBTP protection with safety margin. Purple LED shows SAFE enabled and becomes brighter during attenuation.");b.setClickingTogglesState(true);if(i!=1)b.getProperties().set("reverse",true);switchAttachments[i]=std::make_unique<BA>(processor.apvts,switchIds[i],b);}
     startTimerHz(60);
@@ -127,7 +149,7 @@ FaceplateComponent::~FaceplateComponent() {stopTimer();setLookAndFeel(nullptr);}
 void FaceplateComponent::resized()
 {
     constexpr int centres[]{374,511,649,787,924};
-    for(size_t i=0;i<5;++i)knobs[i].setBounds(centres[i]-40,80,80,80);
+    for(size_t i=0;i<5;++i){knobs[i].setBounds(centres[i]-40,80,80,80);values[i].setBounds(centres[i]-45,179,90,20);}
     switches[0].setBounds(204,137,50,36);switches[1].setBounds(1169,135,50,36);switches[2].setBounds(1299,135,50,36);
     switches[3].setBounds(1039,135,50,36);
 }
@@ -136,6 +158,7 @@ void FaceplateComponent::timerCallback()
 {
     shownGr=processor.currentGrDb.load(std::memory_order_relaxed);
     shownOut=processor.currentOutDb.load(std::memory_order_relaxed);
+    for(size_t i=0;i<values.size();++i)if(!values[i].isBeingEdited())values[i].setText(knobs[i].getTextFromValue(knobs[i].getValue()),juce::dontSendNotification);
     repaint();
 }
 void FaceplateComponent::paintMeter(juce::Graphics& g){
@@ -211,7 +234,6 @@ void FaceplateComponent::paint(juce::Graphics& g)
             if(i==2&&value==100)continue; // 50 and 100 ms are too close for two printed labels.
             text(g,label,q.x-21,q.y-7,42,14,i==4?10.5f:11.0f);
         }
-        text(g,knobs[static_cast<size_t>(i)].getTextFromValue(knobs[static_cast<size_t>(i)].getValue()),cx-45,181,90,16,12);
         text(g,titles[i],cx-68,207,136,21,12);
     }
     paintMeter(g);g.setColour(colour(0xff171c1f));
@@ -248,8 +270,8 @@ void FaceplateComponent::paint(juce::Graphics& g)
 }
 RiderEditor::RiderEditor(RiderProcessor& p):AudioProcessorEditor(p),processor(p),faceplate(p)
 {
-    constexpr int initialWidth=1225; // Always open at the minimum, including restored sessions.
-    addAndMakeVisible(faceplate);setResizable(true,true);setResizeLimits(1000,154,3268,504);
+    constexpr int initialWidth=817; // Always open at the FET 67 minimum, including restored sessions.
+    addAndMakeVisible(faceplate);setResizable(true,true);setResizeLimits(817,126,4085,630);
     getConstrainer()->setFixedAspectRatio(static_cast<double>(kBaseWidth)/kBaseHeight);
     setSize(initialWidth,juce::roundToInt(static_cast<double>(initialWidth)*kBaseHeight/kBaseWidth));resized();
 }
