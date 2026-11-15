@@ -1,4 +1,4 @@
-# Vocal Rider K 1.2.0 — Windows x64
+# Vocal Rider K 1.2.1 — Windows x64
 
 ![Interfaz de Vocal Rider K](Preview.png)
 
@@ -10,7 +10,10 @@ Vocal rider independiente con la estética de VCA SSL: aluminio cepillado, mando
 
 Cierra el DAW. Copia la carpeta completa `Binaries/Vocal Rider K.vst3` a `C:\Program Files\Common Files\VST3\` y vuelve a escanear plugins. No copies únicamente el archivo interior. No reemplaza VCA SSL. `Vocal Rider K.exe` permite usarlo sin DAW; selecciona tu dispositivo en sus ajustes de audio.
 
-## Novedades 1.2.0
+## Novedades 1.2.1
+
+SAFE y FIX intercambian posiciones. SAFE queda a la izquierda del selector RIDE/OUT con LED morado lateral y aro morado, siguiendo la referencia visual. FIX queda a la derecha. Cambio visual: el DSP y los IDs de automatización de ambos botones se conservan.
+
 
 RANGE sustituye a los límites independientes de boost/cut. SENSITIVITY controla la tolerancia alrededor del objetivo. Sidechain musical mono/estéreo opcional, gestionado desde el host, sin controles adicionales en la skin. Se conservan SAFE, FIX y las escalas impresas.
 
@@ -23,7 +26,7 @@ SAFE estima picos entre muestras mediante un interpolador FIR a 8x, anticipa la 
 3. Ajusta RANGE (0–24 dB) para limitar la subida y bajada por igual. RANGE 6 dB permite de −6 a +6 dB. SENSITIVITY 100% busca exactamente el cero K; 0% permite una tolerancia de ±3 dB. Los valores intermedios interpolan esa tolerancia: 50% permite ±1.5 dB. El valor inicial es 100%.
 4. Ajusta SILENCE por encima del ruido de fondo y por debajo de la voz más suave. En silencio el rider vuelve lentamente a 0 dB, sin cortar el audio.
 5. RIDE controla el tiempo de suavizado de ganancia: 50–1500 ms. El detector RMS añade su propia respuesta de 300 ms.
-6. METER alterna RIDE (ganancia aplicada, positiva o negativa) y OUT (RMS relativo a la referencia K). FIX, a la izquierda del botón RIDE/OUT, activa la nivelación automática a 0 dB K. Apagado desactiva la ganancia del rider; SAFE puede seguir limitando los picos si está encendido. FIX arranca encendido. SAFE, a la derecha de RIDE/OUT, activa la protección de picos; también arranca encendido. Su LED ámbar indica reducción de picos.
+6. METER alterna RIDE (ganancia aplicada, positiva o negativa) y OUT (RMS relativo a la referencia K). FIX, a la derecha del botón RIDE/OUT, activa la nivelación automática a 0 dB K. Apagado desactiva la ganancia del rider; SAFE puede seguir limitando los picos si está encendido. FIX arranca encendido. SAFE, a la izquierda de RIDE/OUT, activa la protección de picos; también arranca encendido. Su LED morado a la izquierda del interruptor indica que SAFE está activo; brilla más cuando reduce picos.
 
 No hay ajuste TARGET ni TRIM de salida: sin sidechain, la referencia central queda en 0 dB K. K-12 / K-14 / K-20 usan respectivamente −12 / −14 / −20 dBFS como referencia senoidal. Una senoide de pico −14 dBFS lee 0 K en K-14. Se usa RMS calibrado con +3.0103 dB, no LUFS ni ponderación K de BS.1770. El sistema K original también incluye calibración de monitores; el plugin no calibra tus altavoces.
 
@@ -45,7 +48,7 @@ Los estados antiguos con MAX BOOST / MAX CUT se convierten a RANGE tomando el me
 
 ## Límites
 
-El objetivo se alcanza si la señal supera SILENCE y los límites de ganancia lo permiten. SAFE añade un limitador de protección con estimación true peak a 8x y techo de protección de −1 dBTP. Usa un margen interno conservador de 1.2 dB (nivel interno −2.2 dBFS), por lo que puede actuar antes de llegar al techo. El LED indica cuándo atenúa. Con SAFE apagado no hay protección de picos. El medidor principal sigue siendo RMS K, no un medidor true peak. Si SAFE actúa, la protección de picos tiene prioridad sobre el objetivo medio de 0 dB K. Al conectar el sidechain, el objetivo sigue las variaciones de nivel del instrumental dentro de ±6 dB alrededor del cero K. No escribe curvas en la pista de automatización del DAW; calcula la ganancia internamente.
+El objetivo se alcanza si la señal supera SILENCE y los límites de ganancia lo permiten. SAFE añade un limitador de protección con estimación true peak a 8x y techo de protección de −1 dBTP. Usa un margen interno conservador de 1.2 dB (nivel interno −2.2 dBFS), por lo que puede actuar antes de llegar al techo. El LED morado se intensifica cuando atenúa. Con SAFE apagado no hay protección de picos. El medidor principal sigue siendo RMS K, no un medidor true peak. Si SAFE actúa, la protección de picos tiene prioridad sobre el objetivo medio de 0 dB K. Al conectar el sidechain, el objetivo sigue las variaciones de nivel del instrumental dentro de ±6 dB alrededor del cero K. No escribe curvas en la pista de automatización del DAW; calcula la ganancia internamente.
 
 ## Compilación
 

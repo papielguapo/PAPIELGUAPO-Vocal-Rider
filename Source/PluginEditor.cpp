@@ -98,6 +98,10 @@ void RiderLookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& b
     g.setColour(colour(0xff030607));g.fillEllipse(tip-8,c.y-8,16,16);
     g.setGradientFill(juce::ColourGradient(colour(0xff515a60),tip-3,c.y-5,colour(0xff101416),tip+4,c.y+5,false));
     g.fillEllipse(tip-5,c.y-5.5f,10,11);
+    if(b.getName()=="safe"&&b.getToggleState()){
+        g.setColour(colour(0xffb84dff).withAlpha(0.25f));g.drawEllipse(bx-14,c.y-14,28,28,3);
+        g.setColour(colour(0xffc77aff).withAlpha(0.8f));g.drawEllipse(bx-12,c.y-12,24,24,1);
+    }
     if(hover||down||b.hasKeyboardFocus(true)){g.setColour(colour(0xffb84dff).withAlpha(0.65f));g.drawEllipse(bx-15,c.y-15,30,30,1);}
 }
 FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
@@ -116,7 +120,7 @@ FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
         if(i==4){s.textFromValueFunction=[](double v){const char* labels[]{"K-12","K-14","K-20"};return juce::String(labels[juce::jlimit(0,2,juce::roundToInt(v))]);};s.setTooltip("Automatic target: 0 dB K. Select K-12, K-14 or K-20.");}
         knobAttachments[i]=std::make_unique<SA>(processor.apvts,ids[i],s);}
     const char* switchIds[]{"power","meterMode","fix","safe"};
-    for(size_t i=0;i<switches.size();++i){auto& b=switches[i];addAndMakeVisible(b);b.setName(switchIds[i]);if(i==2)b.setTooltip("FIX: automatically ride the voice to 0 dB K. Off: no rider gain.");if(i==3)b.setTooltip("SAFE: 8x true-peak estimation, -1 dBTP protection with safety margin. LED indicates attenuation.");b.setClickingTogglesState(true);if(i!=1)b.getProperties().set("reverse",true);switchAttachments[i]=std::make_unique<BA>(processor.apvts,switchIds[i],b);}
+    for(size_t i=0;i<switches.size();++i){auto& b=switches[i];addAndMakeVisible(b);b.setName(switchIds[i]);if(i==2)b.setTooltip("FIX: automatically ride the voice to 0 dB K. Off: no rider gain.");if(i==3)b.setTooltip("SAFE: 8x true-peak estimation, -1 dBTP protection with safety margin. Purple LED shows SAFE enabled and becomes brighter during attenuation.");b.setClickingTogglesState(true);if(i!=1)b.getProperties().set("reverse",true);switchAttachments[i]=std::make_unique<BA>(processor.apvts,switchIds[i],b);}
     startTimerHz(60);
 }
 FaceplateComponent::~FaceplateComponent() {stopTimer();setLookAndFeel(nullptr);}
@@ -124,8 +128,8 @@ void FaceplateComponent::resized()
 {
     constexpr int centres[]{374,511,649,787,924};
     for(size_t i=0;i<5;++i)knobs[i].setBounds(centres[i]-40,80,80,80);
-    switches[0].setBounds(204,137,50,36);switches[1].setBounds(1169,135,50,36);switches[2].setBounds(1039,135,50,36);
-    switches[3].setBounds(1299,135,50,36);
+    switches[0].setBounds(204,137,50,36);switches[1].setBounds(1169,135,50,36);switches[2].setBounds(1299,135,50,36);
+    switches[3].setBounds(1039,135,50,36);
 }
 
 void FaceplateComponent::timerCallback()
@@ -212,12 +216,16 @@ void FaceplateComponent::paint(juce::Graphics& g)
     }
     paintMeter(g);g.setColour(colour(0xff171c1f));
     text(g,"RIDE",1140,145,42,15,10);text(g,"OUT",1219,145,35,15,10);text(g,"METER",1158,177,82,18,11);
-    text(g,"ON",1020,145,30,15,10);text(g,"OFF",1089,145,35,15,10);text(g,"FIX",1028,177,82,18,11);
-    text(g,"ON",1280,145,30,15,10);text(g,"OFF",1349,145,35,15,10);text(g,"SAFE",1288,177,82,18,11);
+    text(g,"ON",1020,145,30,15,10);text(g,"OFF",1089,145,35,15,10);text(g,"SAFE",1028,177,82,18,11);
+    text(g,"ON",1280,145,30,15,10);text(g,"OFF",1349,145,35,15,10);text(g,"FIX",1288,177,82,18,11);
     const float reduction=processor.safeReductionDb.load(std::memory_order_relaxed);
-    g.setColour(colour(reduction>0.1f?0xffffb44a:0xff65584a));g.fillEllipse(1280,182,6,6);
+    const bool safeOn=processor.apvts.getRawParameterValue("safe")->load()>0.5f&&processor.apvts.getRawParameterValue("power")->load()>0.5f&&processor.apvts.getRawParameterValue("bypass")->load()<0.5f;
+    const float ledAlpha=safeOn?(reduction>0.1f?0.7f:0.3f):0.0f;
+    g.setGradientFill(juce::ColourGradient(colour(0xffbc65ff).withAlpha(ledAlpha),1012,153,juce::Colours::transparentBlack,1021,153,true));g.fillEllipse(1003,144,18,18);
+    g.setColour(colour(0xff784a96));g.drawEllipse(1009,150,6,6,0.8f);
+    g.setColour(colour(safeOn?(reduction>0.1f?0xffedd0ff:0xffc77aff):0xff665470));g.fillEllipse(1010,151,4,4);
     g.setColour(colour(0xff171c1f));
-    text(g,"0 dB K AUTO",1025,215,220,16,10);text(g,"-1 dBTP",1284,215,90,16,10);
+    text(g,"-1 dBTP",1024,215,90,16,10);text(g,"0 dB K AUTO",1264,215,130,16,10);
     // Hand-drawn vector script, independent of installed fonts.
     juce::Path signature;
     signature.startNewSubPath(0,22);signature.lineTo(12,2);signature.cubicTo(25,-3,25,7,13,12);signature.lineTo(7,12);
