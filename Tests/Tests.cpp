@@ -16,13 +16,13 @@ double run(RiderProcessor& p,double level,int seconds=8,int block=257,bool stere
 #include "SafeTests.h"
 #include "SidechainTests.h"
 int main(){juce::ScopedJuceInitialiser_GUI gui;try{
-    for(int mode=0;mode<3;++mode){RiderProcessor p;set(p,"kmode",static_cast<float>(mode));set(p,"range",18);p.prepareToPlay(48000,257);const double target=mode==0?-12:mode==1?-14:-20;check(std::abs(run(p,-24)-target)<0.15,"K mode converges to reference");}
+    for(int mode=0;mode<3;++mode){RiderProcessor p;set(p,"kmode",static_cast<float>(mode));set(p,"target",-18);set(p,"range",24);p.prepareToPlay(48000,257);const double target=-18;check(std::abs(run(p,-24)-target)<0.15,"K meter selection does not alter target or audio");}
     {RiderProcessor p;p.prepareToPlay(48000,257);double out=run(p,-35);check(out< -30&&p.currentGrDb.load()<=6.01f,"maximum boost respected");}
     {RiderProcessor p;set(p,"kmode",2);set(p,"range",4);p.prepareToPlay(48000,257);run(p,-3);check(std::abs(p.currentGrDb.load()+4)<0.05,"maximum cut respected");}
     {RiderProcessor p;p.prepareToPlay(48000,257);run(p,-110,3);check(std::abs(p.currentGrDb.load())<0.01,"silence does not gain boost");}
     {RiderProcessor p;set(p,"bypass",1);p.prepareToPlay(48000,257);const auto out=run(p,-25);check(std::abs(out-(-25+10*std::log10(0.625)))<0.02,"bypass unity");}
     {RiderProcessor p;p.prepareToPlay(48000,257);run(p,-25);set(p,"fix",0);const auto out=run(p,-25,2);check(std::abs(out-(-25+10*std::log10(0.625)))<0.03,"FIX off returns to unity");set(p,"fix",1);check(std::abs(run(p,-18)+14)<0.15,"FIX on returns to zero K");}
-    {RiderProcessor p;set(p,"kmode",2);set(p,"range",10);set(p,"sensitivity",35);juce::MemoryBlock data;p.getStateInformation(data);RiderProcessor q;q.setStateInformation(data.getData(),static_cast<int>(data.getSize()));check(q.apvts.getRawParameterValue("kmode")->load()==2&&q.apvts.getRawParameterValue("range")->load()==10&&q.apvts.getRawParameterValue("sensitivity")->load()==35,"session state recall");check(q.apvts.getParameter("target")==nullptr&&q.apvts.getParameter("trim")==nullptr,"target fixed at zero; no output trim");}
+    {RiderProcessor p;set(p,"kmode",2);set(p,"range",10);set(p,"sensitivity",35);set(p,"target",-22.5f);juce::MemoryBlock data;p.getStateInformation(data);RiderProcessor q;q.setStateInformation(data.getData(),static_cast<int>(data.getSize()));check(q.apvts.getRawParameterValue("kmode")->load()==2&&q.apvts.getRawParameterValue("range")->load()==10&&q.apvts.getRawParameterValue("sensitivity")->load()==35&&q.apvts.getRawParameterValue("target")->load()==-22.5f,"session state recall");check(q.apvts.getParameter("target")!=nullptr&&q.apvts.getParameter("trim")==nullptr,"adjustable target present; no output trim");}
     {RiderProcessor p;juce::AudioProcessor::BusesLayout layout;layout.inputBuses.add(juce::AudioChannelSet::mono());layout.inputBuses.add(juce::AudioChannelSet::disabled());layout.outputBuses.add(juce::AudioChannelSet::mono());check(p.setBusesLayout(layout),"mono supported");p.prepareToPlay(48000,257);check(std::abs(run(p,-18,8,257,false)+14)<0.15,"mono reference");}
     {RiderProcessor p;set(p,"range",24);set(p,"sensitivity",0);p.prepareToPlay(48000,257);
         const double input=-14-10*std::log10(0.625)+0.5;
@@ -34,6 +34,8 @@ int main(){juce::ScopedJuceInitialiser_GUI gui;try{
         for(auto spec:{std::pair<const char*,float>{"up",4.0f},{"down",10.0f}}){juce::ValueTree child("PARAM");child.setProperty("id",spec.first,nullptr);child.setProperty("value",spec.second,nullptr);state.appendChild(child,nullptr);}
         juce::MemoryBlock block;auto xml=state.createXml();juce::AudioProcessor::copyXmlToBinary(*xml,block);p.setStateInformation(block.getData(),static_cast<int>(block.getSize()));
         check(p.apvts.getRawParameterValue("range")->load()==4&&p.apvts.getRawParameterValue("sensitivity")->load()==100,"old boost/cut state migrates to conservative symmetric range");}
+    for(float target:{-24.0f,-18.0f,-12.0f}){RiderProcessor p;set(p,"range",24);set(p,"target",target);p.prepareToPlay(48000,257);check(std::abs(run(p,-24)-target)<0.15,"adjustable target converges to selected dBFS RMS level");}
+    {RiderProcessor p;auto state=p.apvts.copyState();state.removeChild(state.getChildWithProperty("id","target"),nullptr);state.getChildWithProperty("id","kmode").setProperty("value",2,nullptr);juce::MemoryBlock data;auto xml=state.createXml();juce::AudioProcessor::copyXmlToBinary(*xml,data);p.setStateInformation(data.getData(),static_cast<int>(data.getSize()));check(p.apvts.getRawParameterValue("target")->load()==-20,"old K-20 state migrates to -20 dBFS target");}
     sidechainTests();
     safeTests();
     {RiderProcessor p;std::unique_ptr<juce::AudioProcessorEditor> e(p.createEditor());auto* face=e->getChildComponent(0);std::vector<juce::Label*> fields;
@@ -45,8 +47,8 @@ int main(){juce::ScopedJuceInitialiser_GUI gui;try{
         type(0,"invalid");check(p.apvts.getRawParameterValue("range")->load()==24,"invalid numeric input preserves value");
         type(0,"nan");check(p.apvts.getRawParameterValue("range")->load()==24,"nonfinite numeric input rejected");
         type(0,"5",true);check(p.apvts.getRawParameterValue("range")->load()==24,"cancel preserves original numeric value");
-        type(1,"50%");type(2,"450ms");type(3,"-62dBFS");type(4,"K-20");
-        check(p.apvts.getRawParameterValue("sensitivity")->load()==50&&p.apvts.getRawParameterValue("speed")->load()==450&&p.apvts.getRawParameterValue("gate")->load()==-62&&p.apvts.getRawParameterValue("kmode")->load()==2,"typed values update all remaining parameters");
+        type(1,"50%");type(2,"450ms");type(3,"-62dBFS");type(4,"-20dBFS");
+        check(p.apvts.getRawParameterValue("sensitivity")->load()==50&&p.apvts.getRawParameterValue("speed")->load()==450&&p.apvts.getRawParameterValue("gate")->load()==-62&&p.apvts.getRawParameterValue("target")->load()==-20,"typed values update all remaining parameters");
         e->setSize(1634,252);e.reset();e.reset(p.createEditor());check(e->getWidth()==817&&e->getHeight()==126,"editor reopens at minimum after enlargement");}
     {RiderProcessor p;std::unique_ptr<juce::AudioProcessorEditor> e(p.createEditor());std::cout<<"Editor opening size: "<<e->getWidth()<<" x "<<e->getHeight()<<std::endl;{auto minimum=e->createComponentSnapshot(e->getLocalBounds());auto f=juce::File::getCurrentWorkingDirectory().getChildFile("Preview-Min.png");f.deleteFile();juce::FileOutputStream stream(f);juce::PNGImageFormat png;png.writeImageToStream(minimum,stream);}e->setSize(1634,252);auto img=e->createComponentSnapshot(e->getLocalBounds());juce::File f=juce::File::getCurrentWorkingDirectory().getChildFile("Preview.png");f.deleteFile();juce::FileOutputStream out(f);juce::PNGImageFormat png;png.writeImageToStream(img,out);}
     std::cout<<"ALL DSP TESTS PASSED"<<std::endl;return 0;

@@ -1,6 +1,6 @@
-PASS K mode converges to reference
-PASS K mode converges to reference
-PASS K mode converges to reference
+PASS K meter selection does not alter target or audio
+PASS K meter selection does not alter target or audio
+PASS K meter selection does not alter target or audio
 PASS maximum boost respected
 PASS maximum cut respected
 PASS silence does not gain boost
@@ -8,7 +8,7 @@ PASS bypass unity
 PASS FIX off returns to unity
 PASS FIX on returns to zero K
 PASS session state recall
-PASS target fixed at zero; no output trim
+PASS adjustable target present; no output trim
 PASS mono supported
 PASS mono reference
 PASS low sensitivity preserves small variation inside tolerance
@@ -16,6 +16,10 @@ PASS low sensitivity converges within +/-3 dB K tolerance
 PASS high sensitivity restores exact zero K target
 PASS zero range disables rider correction
 PASS old boost/cut state migrates to conservative symmetric range
+PASS adjustable target converges to selected dBFS RMS level
+PASS adjustable target converges to selected dBFS RMS level
+PASS adjustable target converges to selected dBFS RMS level
+PASS old K-20 state migrates to -20 dBFS target
 PASS stereo music sidechain layout supported
 PASS music reference anchors around selected zero K
 PASS voice follows a 4 dB rise in instrumental

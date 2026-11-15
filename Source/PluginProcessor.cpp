@@ -8,9 +8,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout RiderProcessor::makeParamete
     f("sensitivity","Sensitivity (%)",0,100,100,1);
     f("speed","Ride time (ms)",50,1500,300,1);
     f("gate","Silence threshold (dBFS)",-80,-20,-50);
-    l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"kmode",1},"K reference",juce::StringArray{"K-12","K-14","K-20"},1));
-    for(auto spec: {std::pair<const char*,const char*>{"power","Power"},{"meterMode","Meter output / ride"},{"fix","FIX: automatic 0 dB K"},{"safe","SAFE: true-peak protection"},{"bypass","Bypass"}})
+    l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"kmode",1},"K meter scale",juce::StringArray{"K-12","K-14","K-20"},1));
+    for(auto spec: {std::pair<const char*,const char*>{"power","Power"},{"meterMode","Meter output / ride"},{"fix","FIX: automatic target leveling"},{"safe","SAFE: true-peak protection"},{"bypass","Bypass"}})
         l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{spec.first,1},spec.second,(juce::String(spec.first)=="power"||juce::String(spec.first)=="fix"||juce::String(spec.first)=="safe")));
+    f("target","Target RMS (dBFS)",-36,-6,-14);
     return l;
 }
 void RiderProcessor::prepareToPlay(double sr,int){rate=sr;safeLimiter.prepare(sr);reset();setLatencySamples(safeLimiter.latency());}
@@ -28,14 +29,14 @@ juce::AudioProcessorParameter* RiderProcessor::getBypassParameter() const{return
 void RiderProcessor::processAudio(juce::AudioBuffer<float>& b,juce::MidiBuffer& m,bool hostBypass){
     juce::ScopedNoDenormals nd;m.clear();
     auto v=[&](const char* id){return apvts.getRawParameterValue(id)->load(std::memory_order_relaxed);};
-    const float refs[]{12,14,20};const float ref=refs[juce::jlimit(0,2,juce::roundToInt(v("kmode")))];
-    const float target=-ref, range=v("range"), tolerance=3.0f*(1.0f-v("sensitivity")*0.01f),floor=v("gate");
+    const float target=v("target"), range=v("range"), tolerance=3.0f*(1.0f-v("sensitivity")*0.01f),floor=v("gate");
     const bool active=!hostBypass&&v("bypass")<0.5f&&v("power")>0.5f&&v("fix")>0.5f;
     const bool safeActive=!hostBypass&&v("bypass")<0.5f&&v("power")>0.5f&&v("safe")>0.5f;
     float safeMeter=safeReductionDb.load(std::memory_order_relaxed);
     const float safeMeterRelease=static_cast<float>(std::exp(-1.0/(rate*0.150)));
     const double rmsA=std::exp(-1.0/(rate*0.300));
-    const float gainA=static_cast<float>(std::exp(-1.0/(rate*v("speed")*0.001)));
+    const float cutA=static_cast<float>(std::exp(-1.0/(rate*v("speed")*0.0005)));
+    const float boostA=static_cast<float>(std::exp(-1.0/(rate*v("speed")*0.0015)));
     const float silenceA=static_cast<float>(std::exp(-1.0/(rate*0.8)));
     const float blendStep=static_cast<float>(1.0/(rate*0.01));
     const int channels=juce::jmin(b.getNumChannels(),getMainBusNumInputChannels());
@@ -69,7 +70,7 @@ void RiderProcessor::processAudio(juce::AudioBuffer<float>& b,juce::MidiBuffer& 
             // Soft deadband: preserve variations inside the selected tolerance.
             const float correction=std::copysign(juce::jmax(0.0f,std::abs(error)-tolerance),error);
             const float wanted=gate>0?juce::jlimit(-range,range,correction):0;
-            const float a=gate>0?gainA:silenceA;ride=a*ride+(1-a)*wanted;}
+            const float a=gate>0?(wanted<ride?cutA:boostA):silenceA;ride=a*ride+(1-a)*wanted;}
         blend=juce::jlimit(0.0f,1.0f,blend+(active?blendStep:-blendStep));
         const float gain=juce::Decibels::decibelsToGain(ride*blend);
         double out=0;std::array<float,2> frame{};
@@ -96,6 +97,12 @@ void RiderProcessor::setStateInformation(const void* d,int size){
             juce::ValueTree sensitivityState("PARAM");sensitivityState.setProperty("id","sensitivity",nullptr);sensitivityState.setProperty("value",100.0f,nullptr);state.appendChild(sensitivityState,nullptr);
             if(up.isValid())state.removeChild(up,nullptr);if(down.isValid())state.removeChild(down,nullptr);
         }
+    }
+    if(!state.getChildWithProperty("id","target").isValid()){
+        const auto kState=state.getChildWithProperty("id","kmode");
+        const int mode=juce::jlimit(0,2,static_cast<int>(kState.getProperty("value",1)));
+        const float targets[]{-12,-14,-20};juce::ValueTree targetState("PARAM");
+        targetState.setProperty("id","target",nullptr);targetState.setProperty("value",targets[mode],nullptr);state.appendChild(targetState,nullptr);
     }
     apvts.replaceState(state);
 }

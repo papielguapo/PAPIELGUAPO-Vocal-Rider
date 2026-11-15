@@ -1,63 +1,61 @@
-# Vocal Rider K 1.2.2 — Windows x64
+# Vocal Rider K 1.3.0 — Windows x64
 
-![Interfaz de Vocal Rider K](Preview.png)
+![Vocal Rider K](Preview.png)
 
-[Descargar VST3 y Standalone para Windows x64](https://github.com/papielguapo/Vocal-Rider-K/releases/latest)
+[Descargar VST3 y Standalone](https://github.com/papielguapo/Vocal-Rider-K/releases/latest)
 
-Vocal rider independiente con la estética de VCA SSL: aluminio cepillado, mandos morados, interruptores y medidor LED. Automatiza la ganancia de una pista de voz mediante un detector RMS de 300 ms y ganancia enlazada entre canales. Sin saturación añadida. SAFE incorpora anticipación y reporta su latencia al DAW.
+Nivelador vocal con RANGE, SENSITIVITY, RIDE, SILENCE y TARGET. El objetivo de volumen es ajustable e independiente de la escala K del medidor. La escala K es una referencia de lectura; no es un nivel obligatorio para voces de un género.
 
-## Instalación
+## Instalación y tamaño
 
-Cierra el DAW. Copia la carpeta completa `Binaries/Vocal Rider K.vst3` a `C:\Program Files\Common Files\VST3\` y vuelve a escanear plugins. No copies únicamente el archivo interior. No reemplaza VCA SSL. `Vocal Rider K.exe` permite usarlo sin DAW; selecciona tu dispositivo en sus ajustes de audio.
+Cierra el DAW y copia la carpeta completa `Binaries/Vocal Rider K.vst3` a `C:\Program Files\Common Files\VST3`. Reescanea y reabre el plugin. No copies solo el binario interior. La aplicación Standalone está en Binaries.
 
-## Novedades 1.2.2
+Abre siempre a 817 × 126 px. Se puede ampliar hasta 4085 × 630 px, con la misma proporción y límites que FET 67. Arrastra la esquina inferior derecha.
 
-Doble clic en el valor numérico bajo una perilla para escribirlo. Enter aplica; Escape cancela. Admite coma decimal y unidades (dB, %, ms, dBFS); los valores se limitan al rango permitido. Para K SYSTEM, escribe K-12, K-14 o K-20 (también 12, 14 o 20). El doble clic sobre el mando sigue restableciendo su valor inicial.
+## Controles
 
+| Control | Función |
+|---|---|
+| RANGE | Corrección máxima simétrica, 0–24 dB. Inicial: ±6 dB. |
+| SENSITIVITY | 100% busca TARGET con precisión; 0% permite ±3 dB de tolerancia. 50% permite ±1.5 dB. Inicial: 100%. |
+| RIDE | Suavizado, 50–1500 ms. El recorte usa 0.5× el valor y la subida 1.5×; el detector RMS añade su respuesta de 300 ms. Inicial: 300 ms. |
+| SILENCE | Umbral de detección, −80 a −20 dBFS. Evita perseguir señales demasiado bajas; no corta el audio. Inicial: −50 dBFS. |
+| TARGET | Nivel medio vocal deseado, −36 a −6 dBFS RMS calibrado con senoide. Inicial: −14 dBFS. |
+| SAFE | A la izquierda de RIDE/OUT. Protección de picos, activada inicialmente. LED morado indica activación y brilla más al atenuar. |
+| RIDE / OUT | Muestra corrección aplicada o nivel RMS de salida relativo a la escala K seleccionada. |
+| FIX | A la derecha: activa la nivelación automática hacia TARGET. Apagado desactiva el rider, aunque SAFE puede seguir limitando. |
+| POWER | Desactiva el procesamiento y conserva la latencia reportada al host. |
 
-Escalado idéntico a FET 67: mínimo 817 × 126 px y máximo 4085 × 630 px, con proporción fija. Al abrir/reabrir el editor, siempre inicia en 817 × 126 px, aunque antes se hubiera ampliado. Arrastra la esquina inferior derecha para cambiar su tamaño.
+Doble clic en el número bajo una perilla para escribirlo. Enter aplica; Escape cancela. Admite coma decimal y unidades (dB, %, ms, dBFS). Se limitan los valores fuera de rango y se rechazan entradas inválidas/no finitas. Doble clic sobre el mando restaura su valor inicial.
 
+## Escala K desde el medidor
 
-SAFE y FIX intercambian posiciones. SAFE queda a la izquierda del selector RIDE/OUT con LED morado lateral y aro morado, siguiendo la referencia visual. FIX queda a la derecha. Cambio visual: el DSP y los IDs de automatización de ambos botones se conservan.
+Haz **clic derecho sobre el medidor** y elige K-12, K-14 o K-20. Esta selección solo modifica la lectura: **no cambia el objetivo, la ganancia ni el sonido**. Se guarda con la sesión y sigue disponible como parámetro del host.
 
+Ejemplo: TARGET −18 dBFS equivale a una lectura de −6 K en K-12, −4 K en K-14 y +2 K en K-20. Es la misma señal con escalas diferentes. El encabezado OUTPUT muestra la escala activa.
 
-RANGE sustituye a los límites independientes de boost/cut. SENSITIVITY controla la tolerancia alrededor del objetivo. Sidechain musical mono/estéreo opcional, gestionado desde el host, sin controles adicionales en la skin. Se conservan SAFE, FIX y las escalas impresas.
+El detector usa RMS con +3.0103 dB de calibración senoidal, no LUFS ni ponderación K de BS.1770. Una senoide con pico −14 dBFS lee −14 dBFS en este detector. En estéreo se promedia la energía de los canales y se aplica la misma ganancia a ambos. El sistema K original también contempla calibración de monitores: este plugin no calibra tus altavoces. [Referencia de Bob Katz](https://www.digido.com/portfolio-item/level-practices-part-2/).
 
-SAFE estima picos entre muestras mediante un interpolador FIR a 8x, anticipa la reducción y aplica la misma ganancia a ambos canales. El audio conserva su frecuencia de muestreo original. La latencia fija es `ceil(0.003 × sampleRate) + 96` muestras: 240 muestras / 5 ms a 48 kHz, incluso con SAFE, POWER o el bypass apagados. FL Studio puede compensarla mediante PDC. La transición de SAFE dura 10 ms y su recuperación es de unos 80 ms.
+## Sidechain musical
 
-## Uso
+Conecta el instrumental, sin la voz, al bus auxiliar **Sidechain** (mono o estéreo). No añade controles a la skin. Sin conexión, el objetivo es TARGET fijo. Con música audible aprende una referencia en unos 1.5 segundos y desplaza el objetivo hasta ±6 dB respecto a TARGET siguiendo los cambios sostenidos de nivel. RANGE sigue limitando la corrección y SENSITIVITY su tolerancia.
 
-1. Inserta el plugin en una pista vocal mono o estéreo, antes de compresores y efectos.
-2. Selecciona K-12, K-14 o K-20. Sin sidechain, el objetivo es 0 dB K automático. El selector de tres posiciones está inmediatamente a la izquierda del medidor.
-3. Ajusta RANGE (0–24 dB) para limitar la subida y bajada por igual. RANGE 6 dB permite de −6 a +6 dB. SENSITIVITY 100% busca exactamente el cero K; 0% permite una tolerancia de ±3 dB. Los valores intermedios interpolan esa tolerancia: 50% permite ±1.5 dB. El valor inicial es 100%.
-4. Ajusta SILENCE por encima del ruido de fondo y por debajo de la voz más suave. En silencio el rider vuelve lentamente a 0 dB, sin cortar el audio.
-5. RIDE controla el tiempo de suavizado de ganancia: 50–1500 ms. El detector RMS añade su propia respuesta de 300 ms.
-6. METER alterna RIDE (ganancia aplicada, positiva o negativa) y OUT (RMS relativo a la referencia K). FIX, a la derecha del botón RIDE/OUT, activa la nivelación automática a 0 dB K. Apagado desactiva la ganancia del rider; SAFE puede seguir limitando los picos si está encendido. FIX arranca encendido. SAFE, a la izquierda de RIDE/OUT, activa la protección de picos; también arranca encendido. Su LED morado a la izquierda del interruptor indica que SAFE está activo; brilla más cuando reduce picos.
+Ante silencio/desconexión vuelve suavemente a TARGET. El instrumental solo se analiza; no se mezcla con la salida vocal. La referencia aprendida se reinicia al preparar/reiniciar el procesador o desconectar el bus y no se guarda en presets. No añade latencia.
 
-No hay ajuste TARGET ni TRIM de salida: sin sidechain, la referencia central queda en 0 dB K. K-12 / K-14 / K-20 usan respectivamente −12 / −14 / −20 dBFS como referencia senoidal. Una senoide de pico −14 dBFS lee 0 K en K-14. Se usa RMS calibrado con +3.0103 dB, no LUFS ni ponderación K de BS.1770. El sistema K original también incluye calibración de monitores; el plugin no calibra tus altavoces.
+En FL Studio, envía el instrumental a la pista de voz mediante **Sidechain to this track** y asigna la entrada auxiliar en **Processing → Connections** del wrapper. Mantén la voz como entrada principal. [Manual oficial](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/wrapper.htm).
 
-Referencia técnica: https://www.digido.com/portfolio-item/level-practices-part-2/
+## SAFE y límites
 
-La medición estéreo promedia la energía de ambos canales; aplica la misma ganancia a ambos para conservar su balance. FIX, SAFE, POWER y el bypass del host hacen una transición de 10 ms hacia señal seca. Doble clic devuelve cada mando a su valor inicial. Los parámetros se pueden automatizar y se guardan en la sesión.
+SAFE estima picos entre muestras con un FIR de 65 taps a 8x. Protección de −1 dBTP con un margen interno conservador de 1.2 dB (nivel interno −2.2 dBFS); puede actuar antes del techo. Latencia fija `ceil(0.003 × sampleRate) + 96` muestras, 240 muestras / 5 ms a 48 kHz, incluso con SAFE apagado. Se reporta al host para PDC. Recuperación aproximada: 80 ms. El audio se mantiene a la frecuencia de muestreo original.
 
-## Sidechain musical sin controles nuevos
+TARGET es un objetivo medio, sujeto a RANGE, SENSITIVITY, SILENCE, tiempos de respuesta y SAFE. Si SAFE limita, los picos tienen prioridad. El medidor principal es RMS, no true peak. El plugin no clasifica voz frente a respiraciones/ruido y no escribe curvas en la automatización del DAW.
 
-El VST3 expone una entrada auxiliar opcional llamada **Sidechain**. Conecta el instrumental sin la voz. El plugin mide su nivel y aprende una referencia durante aproximadamente 1.5 segundos de señal audible; después adapta el objetivo de la voz a sus cambios, con un límite de ±6 dB alrededor del cero K. RANGE sigue limitando la ganancia total y SENSITIVITY aplica su tolerancia al objetivo que corresponda.
+## Presets anteriores
 
-Sin sidechain, o si queda en silencio, vuelve suavemente al cero K fijo. El instrumental solo se analiza: no se mezcla en la salida vocal. El aprendizaje se reinicia al preparar/reiniciar el procesador o desconectar el bus. No se guarda una referencia musical aprendida en el preset. La latencia no cambia con el sidechain.
+Al cargar un estado sin TARGET, se transforma la antigua referencia K en un objetivo absoluto: K-12 → −12, K-14 → −14, K-20 → −20 dBFS. Los antiguos límites boost/cut se convierten en RANGE usando el menor y SENSITIVITY 100%. Revisa automatizaciones antiguas: K ahora modifica únicamente el medidor; si quieres mover el nivel, automatiza TARGET.
 
-En FL Studio: envía la pista/bus instrumental a la pista de voz mediante **Sidechain to this track**; en el wrapper del VST3, abre **Processing → Connections** y asigna esa entrada al bus Sidechain. Mantén la voz como entrada principal. Comprueba el enrutado antes de reproducir. [Manual oficial de Image-Line](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/wrapper.htm).
+## Compilación y validación
 
-## Compatibilidad de ajustes
+C++17, CMake ≥3.22, Visual Studio y JUCE. Configura `Rider_JUCE_PATH` si no está en C:/JUCE. Compila Release x64; `Rider_BUILD_TESTS=ON` habilita pruebas de audio y edición numérica. La instalación automática al compilar está desactivada. Informes en Validation.
 
-Los estados antiguos con MAX BOOST / MAX CUT se convierten a RANGE tomando el menor de ambos límites; SENSITIVITY pasa a 100%. Una configuración asimétrica anterior no puede conservarse exactamente con un solo rango simétrico. Revisa los clips de automatización antiguos de esos dos parámetros: ahora sus IDs y funciones son RANGE y SENSITIVITY. El bus sidechain arranca desactivado; debes conectarlo desde el host.
-
-## Límites
-
-El objetivo se alcanza si la señal supera SILENCE y los límites de ganancia lo permiten. SAFE añade un limitador de protección con estimación true peak a 8x y techo de protección de −1 dBTP. Usa un margen interno conservador de 1.2 dB (nivel interno −2.2 dBFS), por lo que puede actuar antes de llegar al techo. El LED morado se intensifica cuando atenúa. Con SAFE apagado no hay protección de picos. El medidor principal sigue siendo RMS K, no un medidor true peak. Si SAFE actúa, la protección de picos tiene prioridad sobre el objetivo medio de 0 dB K. Al conectar el sidechain, el objetivo sigue las variaciones de nivel del instrumental dentro de ±6 dB alrededor del cero K. No escribe curvas en la pista de automatización del DAW; calcula la ganancia internamente.
-
-## Compilación
-
-C++17, CMake >=3.22, Visual Studio y JUCE 7/8/9. Configura `Rider_JUCE_PATH` si JUCE no está en C:/JUCE. Compila en Release x64. La opción `Rider_BUILD_TESTS=ON` habilita pruebas DSP. `Rider_COPY_PLUGIN_AFTER_BUILD` está desactivada para entregar el plugin sin alterar instalaciones.
-
-JUCE se distribuye bajo AGPLv3 o licencia comercial. Puede ser necesaria una licencia comercial de JUCE según el uso y distribución que hagas. Se incluye su archivo de licencia.
+JUCE usa AGPLv3 o licencia comercial. Según el uso y distribución puede ser necesaria una licencia comercial de JUCE. Se incluye JUCE-LICENSE.md.
