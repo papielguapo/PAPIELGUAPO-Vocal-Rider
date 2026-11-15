@@ -147,7 +147,7 @@ FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
 FaceplateComponent::~FaceplateComponent() {stopTimer();setLookAndFeel(nullptr);}
 void FaceplateComponent::resized()
 {
-    constexpr int centres[]{374,511,649,787,924};
+    constexpr int centres[]{511,787,649,924,374};
     for(size_t i=0;i<5;++i){knobs[i].setBounds(centres[i]-40,80,80,80);values[i].setBounds(centres[i]-45,179,90,20);}
     switches[0].setBounds(204,137,50,36);switches[1].setBounds(1169,135,50,36);switches[2].setBounds(1299,135,50,36);
     switches[3].setBounds(1039,135,50,36);
@@ -220,7 +220,7 @@ void FaceplateComponent::paint(juce::Graphics& g)
     lamp(g,{206,32,60,60},processor.apvts.getRawParameterValue("power")->load()>0.5f);
     g.setColour(colour(0xff171c1f));text(g,"POWER",197,102,78,18,14);
     text(g,"ON",176,145,35,17,11);text(g,"OFF",258,145,35,17,11);
-    constexpr float centres[]{374,511,649,787,924};
+    constexpr float centres[]{511,787,649,924,374};
     const char* titles[]{"RANGE / +/- dB","TOLERANCE / dB","RIDE / ms","SILENCE / dBFS","TARGET / dBFS"};
     const std::array<std::vector<double>,5> scaleValues{{
         {0,4,8,12,16,20,24}, {0,0.5,1,1.5,2,2.5,3},

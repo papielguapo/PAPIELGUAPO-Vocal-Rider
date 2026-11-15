@@ -1,10 +1,10 @@
-# Vocal Rider K 1.3.1 — Windows x64
+# Vocal Rider K 1.3.2 — Windows x64
 
 ![Vocal Rider K](Preview.png)
 
 [Descargar VST3 y Standalone](https://github.com/papielguapo/Vocal-Rider-K/releases/latest)
 
-Nivelador vocal con RANGE, TOLERANCE, RIDE, SILENCE y TARGET. El objetivo de volumen es ajustable e independiente de la escala K del medidor. La escala K es una referencia de lectura; no es un nivel obligatorio para voces de un género.
+Nivelador vocal con TARGET, RANGE, RIDE, TOLERANCE y SILENCE. El objetivo de volumen es ajustable e independiente de la escala K del medidor. La escala K es una referencia de lectura; no es un nivel obligatorio para voces de un género.
 
 ## Instalación y tamaño
 
@@ -16,11 +16,11 @@ Abre siempre a 817 × 126 px. Se puede ampliar hasta 4085 × 630 px, con la mism
 
 | Control | Función |
 |---|---|
-| RANGE | Corrección máxima simétrica, 0–24 dB. Inicial: ±6 dB. |
-| TOLERANCE | Tolerancia alrededor de TARGET, de 0 a 3 dB. 0 dB busca el objetivo con precisión; 1.5 dB permite ±1.5 dB; 3 dB conserva variaciones de hasta ±3 dB. Inicial: 0 dB. |
-| RIDE | Suavizado, 50–1500 ms. El recorte usa 0.5× el valor y la subida 1.5×; el detector RMS añade su respuesta de 300 ms. Inicial: 300 ms. |
-| SILENCE | Umbral de detección, −80 a −20 dBFS. Evita perseguir señales demasiado bajas; no corta el audio. Inicial: −50 dBFS. |
 | TARGET | Nivel medio vocal deseado, −36 a −6 dBFS RMS calibrado con senoide. Inicial: −14 dBFS. |
+| RANGE | Corrección máxima simétrica, 0–24 dB. Inicial: ±6 dB. |
+| RIDE | Suavizado, 50–1500 ms. El recorte usa 0.5× el valor y la subida 1.5×; el detector RMS añade su respuesta de 300 ms. Inicial: 300 ms. |
+| TOLERANCE | Tolerancia alrededor de TARGET, de 0 a 3 dB. 0 dB busca el objetivo con precisión; 1.5 dB permite ±1.5 dB; 3 dB conserva variaciones de hasta ±3 dB. Inicial: 0 dB. |
+| SILENCE | Umbral de detección, −80 a −20 dBFS. Evita perseguir señales demasiado bajas; no corta el audio. Inicial: −50 dBFS. |
 | SAFE | A la izquierda de RIDE/OUT. Protección de picos, activada inicialmente. LED morado indica activación y brilla más al atenuar. |
 | RIDE / OUT | Muestra corrección aplicada o nivel RMS de salida relativo a la escala K seleccionada. |
 | RIDER | A la derecha: activa la nivelación automática hacia TARGET. Apagado desactiva el rider, aunque SAFE puede seguir limitando. |
@@ -50,7 +50,7 @@ SAFE estima picos entre muestras con un FIR de 65 taps a 8x. Protección de −1
 
 TARGET es un objetivo medio, sujeto a RANGE, TOLERANCE, SILENCE, tiempos de respuesta y SAFE. Si SAFE limita, los picos tienen prioridad. El medidor principal es RMS, no true peak. El plugin no clasifica voz frente a respiraciones/ruido y no escribe curvas en la automatización del DAW.
 
-## Cambios 1.3.1
+## Cambios 1.3.2
 
 FIX pasa a llamarse RIDER. El botón conserva su ID interno `fix` y la automatización existente. SENSITIVITY se sustituye por TOLERANCE expresado directamente en dB: `tolerancia = 3 × (1 − sensibilidad/100)`. Por ejemplo, el antiguo 25% se convierte a 2.25 dB; el 100%, a 0 dB. La función de audio es la misma para valores equivalentes. Los estados se convierten automáticamente. Revisa los clips de automatización de SENSITIVITY: ahora se automatiza el parámetro `tolerance` en dB y su sentido es inverso al porcentaje anterior.
 
@@ -63,3 +63,7 @@ Al cargar un estado sin TARGET, se transforma la antigua referencia K en un obje
 C++17, CMake ≥3.22, Visual Studio y JUCE. Configura `Rider_JUCE_PATH` si no está en C:/JUCE. Compila Release x64; `Rider_BUILD_TESTS=ON` habilita pruebas de audio y edición numérica. La instalación automática al compilar está desactivada. Informes en Validation.
 
 JUCE usa AGPLv3 o licencia comercial. Según el uso y distribución puede ser necesaria una licencia comercial de JUCE. Se incluye JUCE-LICENSE.md.
+
+## Distribución 1.3.2
+
+Orden de izquierda a derecha: TARGET → RANGE → RIDE → TOLERANCE → SILENCE. Cada control conserva sus ajustes, unidades, escalas, entrada numérica y automatización.
