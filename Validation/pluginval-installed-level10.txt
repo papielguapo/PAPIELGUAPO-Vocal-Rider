@@ -1,5 +1,5 @@
 Started validating: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
-Random seed: 0x1da56
+Random seed: 0x1da60
 Validation started
 Strictness level: 10
 -----------------------------------------------------------------
@@ -7,7 +7,7 @@ Starting tests in: pluginval / Scan for plugins located in: C:\Program Files\Com
 Num plugins found: 1
 
 Testing plugin: VST3-Vocal Rider K-41be935c-60871972
-Papielguapo: Vocal Rider K v1.1.0
+Papielguapo: Vocal Rider K v1.2.0
 Completed tests in pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
 -----------------------------------------------------------------
 Starting tests in: pluginval / Open plugin (cold)...
@@ -124,8 +124,8 @@ Completed tests in pluginval / Basic bus
 -----------------------------------------------------------------
 Starting tests in: pluginval / Listing available buses...
 Inputs:
-	Named layouts: Mono, Stereo
-	Discrete layouts: Discrete #1
+	Named layouts: Mono, Stereo, Mono, Stereo
+	Discrete layouts: Discrete #1, Discrete #1
 Outputs:
 	Named layouts: Mono, Stereo
 	Discrete layouts: Discrete #1

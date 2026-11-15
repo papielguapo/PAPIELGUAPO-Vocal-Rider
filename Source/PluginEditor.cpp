@@ -103,14 +103,16 @@ void RiderLookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& b
 FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
 {
     setLookAndFeel(&look);
-    const char* ids[]{"up","down","speed","gate","kmode"};
-    const char* names[]{"MAX BOOST dB","MAX CUT dB","RIDE ms","SILENCE dBFS","K reference"};
+    const char* ids[]{"range","sensitivity","speed","gate","kmode"};
+    const char* names[]{"RANGE +/- dB","SENSITIVITY percent","RIDE ms","SILENCE dBFS","K reference"};
     for(size_t i=0;i<knobs.size();++i){auto& s=knobs[i];addAndMakeVisible(s);s.setName(names[i]);s.setTitle(names[i]);
         s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);s.setTextBoxStyle(juce::Slider::NoTextBox,false,0,0);
         s.setColour(juce::Slider::textBoxTextColourId,juce::Colour(0xff22202b));s.setColour(juce::Slider::textBoxOutlineColourId,juce::Colours::transparentBlack);
         s.setRotaryParameters(juce::MathConstants<float>::pi*7/6,juce::MathConstants<float>::pi*17/6,true);
         s.setPopupDisplayEnabled(true,true,this);s.setMouseDragSensitivity(180);
-        const double defaults[]{6,12,300,-50,1};s.setDoubleClickReturnValue(true,defaults[i]);
+        const double defaults[]{6,100,300,-50,1};s.setDoubleClickReturnValue(true,defaults[i]);
+        if(i==0)s.setTooltip("RANGE: maximum boost and cut, symmetrically. 6 dB means -6 to +6 dB.");
+        if(i==1)s.setTooltip("SENSITIVITY: 100% seeks exact 0 dB K; 0% allows +/-3 dB around zero K. RIDE controls speed.");
         if(i==4){s.textFromValueFunction=[](double v){const char* labels[]{"K-12","K-14","K-20"};return juce::String(labels[juce::jlimit(0,2,juce::roundToInt(v))]);};s.setTooltip("Automatic target: 0 dB K. Select K-12, K-14 or K-20.");}
         knobAttachments[i]=std::make_unique<SA>(processor.apvts,ids[i],s);}
     const char* switchIds[]{"power","meterMode","fix","safe"};
@@ -183,9 +185,9 @@ void FaceplateComponent::paint(juce::Graphics& g)
     g.setColour(colour(0xff171c1f));text(g,"POWER",197,102,78,18,14);
     text(g,"ON",176,145,35,17,11);text(g,"OFF",258,145,35,17,11);
     constexpr float centres[]{374,511,649,787,924};
-    const char* titles[]{"MAX BOOST / dB","MAX CUT / dB","RIDE / ms","SILENCE / dBFS","K-12 / K-14 / K-20"};
+    const char* titles[]{"RANGE / +/- dB","SENSITIVITY / %","RIDE / ms","SILENCE / dBFS","K-12 / K-14 / K-20"};
     const std::array<std::vector<double>,5> scaleValues{{
-        {0,3,6,9,12,15,18}, {0,4,8,12,16,20,24},
+        {0,4,8,12,16,20,24}, {0,25,50,75,100},
         {50,100,300,600,1000,1500}, {-80,-70,-60,-50,-40,-30,-20}, {0,1,2}
     }};
     for(int i=0;i<5;++i){

@@ -40,5 +40,8 @@ private:
     SafeLimiter safeLimiter;
     double rate=44100, energy=0, outputEnergy=0;
     float ride=0, blend=1, gate=0;
+    double musicEnergy=0, musicReference=0, musicReferenceSum=0;
+    int musicWarmup=0, musicReferenceCount=0;
+    float musicOffset=0;
     void processAudio(juce::AudioBuffer<float>&, juce::MidiBuffer&, bool);
 };
