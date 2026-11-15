@@ -5,11 +5,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout RiderProcessor::makeParamete
     juce::AudioProcessorValueTreeState::ParameterLayout l;
     auto f=[&](const char* id,const char* name,float lo,float hi,float def,float step=0.1f){l.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{id,1},name,juce::NormalisableRange<float>(lo,hi,step),def));};
     f("range","Range +/- (dB)",0,24,6);
-    f("sensitivity","Sensitivity (%)",0,100,100,1);
+    f("tolerance","Tolerance (dB)",0,3,0,0.01f);
     f("speed","Ride time (ms)",50,1500,300,1);
     f("gate","Silence threshold (dBFS)",-80,-20,-50);
     l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"kmode",1},"K meter scale",juce::StringArray{"K-12","K-14","K-20"},1));
-    for(auto spec: {std::pair<const char*,const char*>{"power","Power"},{"meterMode","Meter output / ride"},{"fix","FIX: automatic target leveling"},{"safe","SAFE: true-peak protection"},{"bypass","Bypass"}})
+    for(auto spec: {std::pair<const char*,const char*>{"power","Power"},{"meterMode","Meter output / ride"},{"fix","RIDER: automatic target leveling"},{"safe","SAFE: true-peak protection"},{"bypass","Bypass"}})
         l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{spec.first,1},spec.second,(juce::String(spec.first)=="power"||juce::String(spec.first)=="fix"||juce::String(spec.first)=="safe")));
     f("target","Target RMS (dBFS)",-36,-6,-14);
     return l;
@@ -29,7 +29,7 @@ juce::AudioProcessorParameter* RiderProcessor::getBypassParameter() const{return
 void RiderProcessor::processAudio(juce::AudioBuffer<float>& b,juce::MidiBuffer& m,bool hostBypass){
     juce::ScopedNoDenormals nd;m.clear();
     auto v=[&](const char* id){return apvts.getRawParameterValue(id)->load(std::memory_order_relaxed);};
-    const float target=v("target"), range=v("range"), tolerance=3.0f*(1.0f-v("sensitivity")*0.01f),floor=v("gate");
+    const float target=v("target"), range=v("range"), tolerance=v("tolerance"),floor=v("gate");
     const bool active=!hostBypass&&v("bypass")<0.5f&&v("power")>0.5f&&v("fix")>0.5f;
     const bool safeActive=!hostBypass&&v("bypass")<0.5f&&v("power")>0.5f&&v("safe")>0.5f;
     float safeMeter=safeReductionDb.load(std::memory_order_relaxed);
@@ -97,6 +97,13 @@ void RiderProcessor::setStateInformation(const void* d,int size){
             juce::ValueTree sensitivityState("PARAM");sensitivityState.setProperty("id","sensitivity",nullptr);sensitivityState.setProperty("value",100.0f,nullptr);state.appendChild(sensitivityState,nullptr);
             if(up.isValid())state.removeChild(up,nullptr);if(down.isValid())state.removeChild(down,nullptr);
         }
+    }
+    if(!state.getChildWithProperty("id","tolerance").isValid()){
+        const auto legacy=state.getChildWithProperty("id","sensitivity");
+        const float sensitivity=juce::jlimit(0.0f,100.0f,static_cast<float>(legacy.getProperty("value",100.0f)));
+        juce::ValueTree toleranceState("PARAM");toleranceState.setProperty("id","tolerance",nullptr);
+        toleranceState.setProperty("value",3.0f*(1.0f-sensitivity*0.01f),nullptr);state.appendChild(toleranceState,nullptr);
+        if(legacy.isValid())state.removeChild(legacy,nullptr);
     }
     if(!state.getChildWithProperty("id","target").isValid()){
         const auto kState=state.getChildWithProperty("id","kmode");

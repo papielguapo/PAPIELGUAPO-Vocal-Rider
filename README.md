@@ -1,10 +1,10 @@
-# Vocal Rider K 1.3.0 — Windows x64
+# Vocal Rider K 1.3.1 — Windows x64
 
 ![Vocal Rider K](Preview.png)
 
 [Descargar VST3 y Standalone](https://github.com/papielguapo/Vocal-Rider-K/releases/latest)
 
-Nivelador vocal con RANGE, SENSITIVITY, RIDE, SILENCE y TARGET. El objetivo de volumen es ajustable e independiente de la escala K del medidor. La escala K es una referencia de lectura; no es un nivel obligatorio para voces de un género.
+Nivelador vocal con RANGE, TOLERANCE, RIDE, SILENCE y TARGET. El objetivo de volumen es ajustable e independiente de la escala K del medidor. La escala K es una referencia de lectura; no es un nivel obligatorio para voces de un género.
 
 ## Instalación y tamaño
 
@@ -17,16 +17,16 @@ Abre siempre a 817 × 126 px. Se puede ampliar hasta 4085 × 630 px, con la mism
 | Control | Función |
 |---|---|
 | RANGE | Corrección máxima simétrica, 0–24 dB. Inicial: ±6 dB. |
-| SENSITIVITY | 100% busca TARGET con precisión; 0% permite ±3 dB de tolerancia. 50% permite ±1.5 dB. Inicial: 100%. |
+| TOLERANCE | Tolerancia alrededor de TARGET, de 0 a 3 dB. 0 dB busca el objetivo con precisión; 1.5 dB permite ±1.5 dB; 3 dB conserva variaciones de hasta ±3 dB. Inicial: 0 dB. |
 | RIDE | Suavizado, 50–1500 ms. El recorte usa 0.5× el valor y la subida 1.5×; el detector RMS añade su respuesta de 300 ms. Inicial: 300 ms. |
 | SILENCE | Umbral de detección, −80 a −20 dBFS. Evita perseguir señales demasiado bajas; no corta el audio. Inicial: −50 dBFS. |
 | TARGET | Nivel medio vocal deseado, −36 a −6 dBFS RMS calibrado con senoide. Inicial: −14 dBFS. |
 | SAFE | A la izquierda de RIDE/OUT. Protección de picos, activada inicialmente. LED morado indica activación y brilla más al atenuar. |
 | RIDE / OUT | Muestra corrección aplicada o nivel RMS de salida relativo a la escala K seleccionada. |
-| FIX | A la derecha: activa la nivelación automática hacia TARGET. Apagado desactiva el rider, aunque SAFE puede seguir limitando. |
+| RIDER | A la derecha: activa la nivelación automática hacia TARGET. Apagado desactiva el rider, aunque SAFE puede seguir limitando. |
 | POWER | Desactiva el procesamiento y conserva la latencia reportada al host. |
 
-Doble clic en el número bajo una perilla para escribirlo. Enter aplica; Escape cancela. Admite coma decimal y unidades (dB, %, ms, dBFS). Se limitan los valores fuera de rango y se rechazan entradas inválidas/no finitas. Doble clic sobre el mando restaura su valor inicial.
+Doble clic en el número bajo una perilla para escribirlo. Enter aplica; Escape cancela. Admite coma decimal y unidades (dB, ms, dBFS). Se limitan los valores fuera de rango y se rechazan entradas inválidas/no finitas. Doble clic sobre el mando restaura su valor inicial.
 
 ## Escala K desde el medidor
 
@@ -38,7 +38,7 @@ El detector usa RMS con +3.0103 dB de calibración senoidal, no LUFS ni ponderac
 
 ## Sidechain musical
 
-Conecta el instrumental, sin la voz, al bus auxiliar **Sidechain** (mono o estéreo). No añade controles a la skin. Sin conexión, el objetivo es TARGET fijo. Con música audible aprende una referencia en unos 1.5 segundos y desplaza el objetivo hasta ±6 dB respecto a TARGET siguiendo los cambios sostenidos de nivel. RANGE sigue limitando la corrección y SENSITIVITY su tolerancia.
+Conecta el instrumental, sin la voz, al bus auxiliar **Sidechain** (mono o estéreo). No añade controles a la skin. Sin conexión, el objetivo es TARGET fijo. Con música audible aprende una referencia en unos 1.5 segundos y desplaza el objetivo hasta ±6 dB respecto a TARGET siguiendo los cambios sostenidos de nivel. RANGE sigue limitando la corrección y TOLERANCE su tolerancia.
 
 Ante silencio/desconexión vuelve suavemente a TARGET. El instrumental solo se analiza; no se mezcla con la salida vocal. La referencia aprendida se reinicia al preparar/reiniciar el procesador o desconectar el bus y no se guarda en presets. No añade latencia.
 
@@ -48,11 +48,15 @@ En FL Studio, envía el instrumental a la pista de voz mediante **Sidechain to t
 
 SAFE estima picos entre muestras con un FIR de 65 taps a 8x. Protección de −1 dBTP con un margen interno conservador de 1.2 dB (nivel interno −2.2 dBFS); puede actuar antes del techo. Latencia fija `ceil(0.003 × sampleRate) + 96` muestras, 240 muestras / 5 ms a 48 kHz, incluso con SAFE apagado. Se reporta al host para PDC. Recuperación aproximada: 80 ms. El audio se mantiene a la frecuencia de muestreo original.
 
-TARGET es un objetivo medio, sujeto a RANGE, SENSITIVITY, SILENCE, tiempos de respuesta y SAFE. Si SAFE limita, los picos tienen prioridad. El medidor principal es RMS, no true peak. El plugin no clasifica voz frente a respiraciones/ruido y no escribe curvas en la automatización del DAW.
+TARGET es un objetivo medio, sujeto a RANGE, TOLERANCE, SILENCE, tiempos de respuesta y SAFE. Si SAFE limita, los picos tienen prioridad. El medidor principal es RMS, no true peak. El plugin no clasifica voz frente a respiraciones/ruido y no escribe curvas en la automatización del DAW.
+
+## Cambios 1.3.1
+
+FIX pasa a llamarse RIDER. El botón conserva su ID interno `fix` y la automatización existente. SENSITIVITY se sustituye por TOLERANCE expresado directamente en dB: `tolerancia = 3 × (1 − sensibilidad/100)`. Por ejemplo, el antiguo 25% se convierte a 2.25 dB; el 100%, a 0 dB. La función de audio es la misma para valores equivalentes. Los estados se convierten automáticamente. Revisa los clips de automatización de SENSITIVITY: ahora se automatiza el parámetro `tolerance` en dB y su sentido es inverso al porcentaje anterior.
 
 ## Presets anteriores
 
-Al cargar un estado sin TARGET, se transforma la antigua referencia K en un objetivo absoluto: K-12 → −12, K-14 → −14, K-20 → −20 dBFS. Los antiguos límites boost/cut se convierten en RANGE usando el menor y SENSITIVITY 100%. Revisa automatizaciones antiguas: K ahora modifica únicamente el medidor; si quieres mover el nivel, automatiza TARGET.
+Al cargar un estado sin TARGET, se transforma la antigua referencia K en un objetivo absoluto: K-12 → −12, K-14 → −14, K-20 → −20 dBFS. Los antiguos límites boost/cut se convierten en RANGE usando el menor y TOLERANCE 0 dB. Revisa automatizaciones antiguas: K ahora modifica únicamente el medidor; si quieres mover el nivel, automatiza TARGET.
 
 ## Compilación y validación
 

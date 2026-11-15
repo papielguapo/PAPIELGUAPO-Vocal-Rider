@@ -108,16 +108,16 @@ void RiderLookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& b
 FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
 {
     setLookAndFeel(&look);
-    const char* ids[]{"range","sensitivity","speed","gate","target"};
-    const char* names[]{"RANGE +/- dB","SENSITIVITY percent","RIDE ms","SILENCE dBFS","TARGET RMS dBFS"};
+    const char* ids[]{"range","tolerance","speed","gate","target"};
+    const char* names[]{"RANGE +/- dB","TOLERANCE dB","RIDE ms","SILENCE dBFS","TARGET RMS dBFS"};
     for(size_t i=0;i<knobs.size();++i){auto& s=knobs[i];addAndMakeVisible(s);s.setName(names[i]);s.setTitle(names[i]);
         s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);s.setTextBoxStyle(juce::Slider::NoTextBox,false,0,0);
         s.setColour(juce::Slider::textBoxTextColourId,juce::Colour(0xff22202b));s.setColour(juce::Slider::textBoxOutlineColourId,juce::Colours::transparentBlack);
         s.setRotaryParameters(juce::MathConstants<float>::pi*7/6,juce::MathConstants<float>::pi*17/6,true);
         s.setPopupDisplayEnabled(true,true,this);s.setMouseDragSensitivity(180);
-        const double defaults[]{6,100,300,-50,-14};s.setDoubleClickReturnValue(true,defaults[i]);
+        const double defaults[]{6,0,300,-50,-14};s.setDoubleClickReturnValue(true,defaults[i]);
         if(i==0)s.setTooltip("RANGE: maximum boost and cut, symmetrically. 6 dB means -6 to +6 dB.");
-        if(i==1)s.setTooltip("SENSITIVITY: 100% seeks the selected TARGET; 0% allows +/-3 dB around it. RIDE controls speed.");
+        if(i==1)s.setTooltip("TOLERANCE: 0 dB follows TARGET precisely; 3 dB preserves variations within +/-3 dB. RIDE controls speed.");
         if(i==4)s.setTooltip("TARGET: desired average vocal level, -36 to -6 dBFS (sine-calibrated RMS). K scale is selected by right-clicking the meter.");
         knobAttachments[i]=std::make_unique<SA>(processor.apvts,ids[i],s);
         auto& value=values[i];addAndMakeVisible(value);value.setName(juce::String(names[i])+" value");
@@ -134,14 +134,14 @@ FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
         value.onTextChange=[this,i,parameter=processor.apvts.getParameter(ids[i])]{
             const auto original=knobs[i].getValue();double parsed=original;bool valid=false;
             auto input=values[i].getText().trim().replace(",",".");
-            input=input.toLowerCase();if(i==0)input=input.replace("db","");if(i==1)input=input.replace("%","");if(i==2)input=input.replace("ms","");if(i==3||i==4)input=input.replace("dbfs","");input=input.trim();
+            input=input.toLowerCase();if(i==0)input=input.replace("db","");if(i==1)input=input.replace("db","");if(i==2)input=input.replace("ms","");if(i==3||i==4)input=input.replace("dbfs","");input=input.trim();
             char* end=nullptr;parsed=std::strtod(input.toRawUTF8(),&end);valid=!input.isEmpty()&&end&&*end=='\0'&&std::isfinite(parsed);
             if(valid){knobs[i].setValue(parsed,juce::dontSendNotification);parameter->beginChangeGesture();parameter->setValueNotifyingHost(parameter->convertTo0to1(static_cast<float>(knobs[i].getValue())));parameter->endChangeGesture();}
             values[i].setText(knobs[i].getTextFromValue(knobs[i].getValue()),juce::dontSendNotification);
         };
     }
     const char* switchIds[]{"power","meterMode","fix","safe"};
-    for(size_t i=0;i<switches.size();++i){auto& b=switches[i];addAndMakeVisible(b);b.setName(switchIds[i]);if(i==2)b.setTooltip("FIX: automatically ride the voice to TARGET. Off: no rider gain.");if(i==3)b.setTooltip("SAFE: 8x true-peak estimation, -1 dBTP protection with safety margin. Purple LED shows SAFE enabled and becomes brighter during attenuation.");b.setClickingTogglesState(true);if(i!=1)b.getProperties().set("reverse",true);switchAttachments[i]=std::make_unique<BA>(processor.apvts,switchIds[i],b);}
+    for(size_t i=0;i<switches.size();++i){auto& b=switches[i];addAndMakeVisible(b);b.setName(switchIds[i]);if(i==2)b.setTooltip("RIDER: automatically ride the voice to TARGET. Off: no rider gain.");if(i==3)b.setTooltip("SAFE: 8x true-peak estimation, -1 dBTP protection with safety margin. Purple LED shows SAFE enabled and becomes brighter during attenuation.");b.setClickingTogglesState(true);if(i!=1)b.getProperties().set("reverse",true);switchAttachments[i]=std::make_unique<BA>(processor.apvts,switchIds[i],b);}
     startTimerHz(60);
 }
 FaceplateComponent::~FaceplateComponent() {stopTimer();setLookAndFeel(nullptr);}
@@ -221,9 +221,9 @@ void FaceplateComponent::paint(juce::Graphics& g)
     g.setColour(colour(0xff171c1f));text(g,"POWER",197,102,78,18,14);
     text(g,"ON",176,145,35,17,11);text(g,"OFF",258,145,35,17,11);
     constexpr float centres[]{374,511,649,787,924};
-    const char* titles[]{"RANGE / +/- dB","SENSITIVITY / %","RIDE / ms","SILENCE / dBFS","TARGET / dBFS"};
+    const char* titles[]{"RANGE / +/- dB","TOLERANCE / dB","RIDE / ms","SILENCE / dBFS","TARGET / dBFS"};
     const std::array<std::vector<double>,5> scaleValues{{
-        {0,4,8,12,16,20,24}, {0,25,50,75,100},
+        {0,4,8,12,16,20,24}, {0,0.5,1,1.5,2,2.5,3},
         {50,100,300,600,1000,1500}, {-80,-70,-60,-50,-40,-30,-20}, {-36,-30,-24,-18,-12,-6}
     }};
     for(int i=0;i<5;++i){
@@ -239,7 +239,7 @@ void FaceplateComponent::paint(juce::Graphics& g)
             const double proportion=knobs[static_cast<size_t>(i)].valueToProportionOfLength(value);
             auto q=point(proportion,47);g.fillEllipse(q.x-1.7f,q.y-1.7f,3.4f,3.4f);
             q=point(proportion,57);
-            juce::String label(value,0);
+            juce::String label(value,i==1&&value!=std::floor(value)?1:0);
             if(i==2&&value==100)continue; // 50 and 100 ms are too close for two printed labels.
             text(g,label,q.x-21,q.y-7,42,14,i==4?10.5f:11.0f);
         }
@@ -248,7 +248,7 @@ void FaceplateComponent::paint(juce::Graphics& g)
     paintMeter(g);g.setColour(colour(0xff171c1f));
     text(g,"RIDE",1140,145,42,15,10);text(g,"OUT",1219,145,35,15,10);text(g,"METER",1158,177,82,18,11);
     text(g,"ON",1020,145,30,15,10);text(g,"OFF",1089,145,35,15,10);text(g,"SAFE",1028,177,82,18,11);
-    text(g,"ON",1280,145,30,15,10);text(g,"OFF",1349,145,35,15,10);text(g,"FIX",1288,177,82,18,11);
+    text(g,"ON",1280,145,30,15,10);text(g,"OFF",1349,145,35,15,10);text(g,"RIDER",1288,177,82,18,11);
     const float reduction=processor.safeReductionDb.load(std::memory_order_relaxed);
     const bool safeOn=processor.apvts.getRawParameterValue("safe")->load()>0.5f&&processor.apvts.getRawParameterValue("power")->load()>0.5f&&processor.apvts.getRawParameterValue("bypass")->load()<0.5f;
     const float ledAlpha=safeOn?(reduction>0.1f?0.7f:0.3f):0.0f;

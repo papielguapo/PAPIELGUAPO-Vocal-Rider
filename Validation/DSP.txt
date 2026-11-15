@@ -5,21 +5,22 @@ PASS maximum boost respected
 PASS maximum cut respected
 PASS silence does not gain boost
 PASS bypass unity
-PASS FIX off returns to unity
-PASS FIX on returns to zero K
+PASS RIDER off returns to unity
+PASS RIDER on returns to zero K
 PASS session state recall
 PASS adjustable target present; no output trim
 PASS mono supported
 PASS mono reference
-PASS low sensitivity preserves small variation inside tolerance
-PASS low sensitivity converges within +/-3 dB K tolerance
-PASS high sensitivity restores exact zero K target
+PASS 3 dB tolerance preserves small variation inside tolerance
+PASS 3 dB tolerance converges within +/-3 dB K tolerance
+PASS zero tolerance restores exact zero K target
 PASS zero range disables rider correction
 PASS old boost/cut state migrates to conservative symmetric range
 PASS adjustable target converges to selected dBFS RMS level
 PASS adjustable target converges to selected dBFS RMS level
 PASS adjustable target converges to selected dBFS RMS level
 PASS old K-20 state migrates to -20 dBFS target
+PASS old sensitivity 25% migrates to 2.25 dB tolerance
 PASS stereo music sidechain layout supported
 PASS music reference anchors around selected zero K
 PASS voice follows a 4 dB rise in instrumental
