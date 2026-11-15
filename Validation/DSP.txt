@@ -1,0 +1,14 @@
+PASS K mode converges to reference
+PASS K mode converges to reference
+PASS K mode converges to reference
+PASS maximum boost respected
+PASS maximum cut respected
+PASS silence does not gain boost
+PASS bypass unity
+PASS FIX off returns to unity
+PASS FIX on returns to zero K
+PASS session state recall
+PASS target fixed at zero; no output trim
+PASS mono supported
+PASS mono reference
+ALL DSP TESTS PASSED
