@@ -24,11 +24,11 @@ private:
     RiderProcessor& processor;
     RiderLookAndFeel look;
     std::array<juce::Slider,5> knobs;
-    std::array<juce::ToggleButton,3> switches;
+    std::array<juce::ToggleButton,4> switches;
     using SA = juce::AudioProcessorValueTreeState::SliderAttachment;
     using BA = juce::AudioProcessorValueTreeState::ButtonAttachment;
     std::array<std::unique_ptr<SA>,5> knobAttachments;
-    std::array<std::unique_ptr<BA>,3> switchAttachments;
+    std::array<std::unique_ptr<BA>,4> switchAttachments;
     float shownGr = 0, shownOut = -100;
     juce::TooltipWindow tooltips { this, 500 };
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaceplateComponent)

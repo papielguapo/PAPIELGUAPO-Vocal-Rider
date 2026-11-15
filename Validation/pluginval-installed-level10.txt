@@ -1,5 +1,5 @@
 Started validating: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
-Random seed: 0x1da4d
+Random seed: 0x1da56
 Validation started
 Strictness level: 10
 -----------------------------------------------------------------
@@ -7,7 +7,7 @@ Starting tests in: pluginval / Scan for plugins located in: C:\Program Files\Com
 Num plugins found: 1
 
 Testing plugin: VST3-Vocal Rider K-41be935c-60871972
-Papielguapo: Vocal Rider K v1.0.0
+Papielguapo: Vocal Rider K v1.1.0
 Completed tests in pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
 -----------------------------------------------------------------
 Starting tests in: pluginval / Open plugin (cold)...
@@ -23,7 +23,7 @@ Plugin name: Vocal Rider K
 Alternative names: Vocal Rider K
 SupportsDoublePrecision: no
 Reported latency: 0
-Reported taillength: 0
+Reported taillength: 0.00219955
 Completed tests in pluginval / Plugin info
 -----------------------------------------------------------------
 Starting tests in: pluginval / Plugin programs...

@@ -106,23 +106,24 @@ FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
     const char* ids[]{"up","down","speed","gate","kmode"};
     const char* names[]{"MAX BOOST dB","MAX CUT dB","RIDE ms","SILENCE dBFS","K reference"};
     for(size_t i=0;i<knobs.size();++i){auto& s=knobs[i];addAndMakeVisible(s);s.setName(names[i]);s.setTitle(names[i]);
-        s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);s.setTextBoxStyle(juce::Slider::TextBoxBelow,false,80,18);
+        s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);s.setTextBoxStyle(juce::Slider::NoTextBox,false,0,0);
         s.setColour(juce::Slider::textBoxTextColourId,juce::Colour(0xff22202b));s.setColour(juce::Slider::textBoxOutlineColourId,juce::Colours::transparentBlack);
         s.setRotaryParameters(juce::MathConstants<float>::pi*7/6,juce::MathConstants<float>::pi*17/6,true);
         s.setPopupDisplayEnabled(true,true,this);s.setMouseDragSensitivity(180);
         const double defaults[]{6,12,300,-50,1};s.setDoubleClickReturnValue(true,defaults[i]);
         if(i==4){s.textFromValueFunction=[](double v){const char* labels[]{"K-12","K-14","K-20"};return juce::String(labels[juce::jlimit(0,2,juce::roundToInt(v))]);};s.setTooltip("Automatic target: 0 dB K. Select K-12, K-14 or K-20.");}
         knobAttachments[i]=std::make_unique<SA>(processor.apvts,ids[i],s);}
-    const char* switchIds[]{"power","meterMode","fix"};
-    for(size_t i=0;i<switches.size();++i){auto& b=switches[i];addAndMakeVisible(b);b.setName(switchIds[i]);if(i==2)b.setTooltip("FIX: automatically ride the voice to 0 dB K. Off: unity gain.");b.setClickingTogglesState(true);if(i==0||i==2)b.getProperties().set("reverse",true);switchAttachments[i]=std::make_unique<BA>(processor.apvts,switchIds[i],b);}
+    const char* switchIds[]{"power","meterMode","fix","safe"};
+    for(size_t i=0;i<switches.size();++i){auto& b=switches[i];addAndMakeVisible(b);b.setName(switchIds[i]);if(i==2)b.setTooltip("FIX: automatically ride the voice to 0 dB K. Off: no rider gain.");if(i==3)b.setTooltip("SAFE: 8x true-peak estimation, -1 dBTP protection with safety margin. LED indicates attenuation.");b.setClickingTogglesState(true);if(i!=1)b.getProperties().set("reverse",true);switchAttachments[i]=std::make_unique<BA>(processor.apvts,switchIds[i],b);}
     startTimerHz(60);
 }
 FaceplateComponent::~FaceplateComponent() {stopTimer();setLookAndFeel(nullptr);}
 void FaceplateComponent::resized()
 {
     constexpr int centres[]{374,511,649,787,924};
-    for(size_t i=0;i<5;++i)knobs[i].setBounds(centres[i]-40,80,80,98);
+    for(size_t i=0;i<5;++i)knobs[i].setBounds(centres[i]-40,80,80,80);
     switches[0].setBounds(204,137,50,36);switches[1].setBounds(1169,135,50,36);switches[2].setBounds(1039,135,50,36);
+    switches[3].setBounds(1299,135,50,36);
 }
 
 void FaceplateComponent::timerCallback()
@@ -183,11 +184,38 @@ void FaceplateComponent::paint(juce::Graphics& g)
     text(g,"ON",176,145,35,17,11);text(g,"OFF",258,145,35,17,11);
     constexpr float centres[]{374,511,649,787,924};
     const char* titles[]{"MAX BOOST / dB","MAX CUT / dB","RIDE / ms","SILENCE / dBFS","K-12 / K-14 / K-20"};
-    for(int i=0;i<5;++i){g.setColour(colour(0xff171c1f));text(g,titles[i],centres[i]-68,197,136,21,12);}
+    const std::array<std::vector<double>,5> scaleValues{{
+        {0,3,6,9,12,15,18}, {0,4,8,12,16,20,24},
+        {50,100,300,600,1000,1500}, {-80,-70,-60,-50,-40,-30,-20}, {0,1,2}
+    }};
+    for(int i=0;i<5;++i){
+        const float cx=centres[i], cy=120;
+        auto point=[&](double proportion,float radius){
+            const float a=juce::MathConstants<float>::pi*(7.0f/6.0f+5.0f/3.0f*static_cast<float>(proportion));
+            return juce::Point<float>(cx+std::sin(a)*radius,cy-std::cos(a)*radius);
+        };
+        g.setColour(colour(0xff282e30));
+        const int ticks=i==4?2:20;
+        for(int t=0;t<=ticks;++t){auto q=point(static_cast<double>(t)/ticks,47);g.fillEllipse(q.x-1.2f,q.y-1.2f,2.4f,2.4f);}
+        for(double value:scaleValues[static_cast<size_t>(i)]){
+            const double proportion=knobs[static_cast<size_t>(i)].valueToProportionOfLength(value);
+            auto q=point(proportion,47);g.fillEllipse(q.x-1.7f,q.y-1.7f,3.4f,3.4f);
+            q=point(proportion,57);
+            juce::String label=i==4?juce::String(value==0?"K-12":value==1?"K-14":"K-20"):juce::String(value,0);
+            if(i==2&&value==100)continue; // 50 and 100 ms are too close for two printed labels.
+            text(g,label,q.x-21,q.y-7,42,14,i==4?10.5f:11.0f);
+        }
+        text(g,knobs[static_cast<size_t>(i)].getTextFromValue(knobs[static_cast<size_t>(i)].getValue()),cx-45,181,90,16,12);
+        text(g,titles[i],cx-68,207,136,21,12);
+    }
     paintMeter(g);g.setColour(colour(0xff171c1f));
     text(g,"RIDE",1140,145,42,15,10);text(g,"OUT",1219,145,35,15,10);text(g,"METER",1158,177,82,18,11);
     text(g,"ON",1020,145,30,15,10);text(g,"OFF",1089,145,35,15,10);text(g,"FIX",1028,177,82,18,11);
-    text(g,"AUTO TARGET",1260,145,128,18,11);text(g,"0 dB K",1260,177,128,18,14);text(g,"K SYSTEM",856,48,136,18,12);
+    text(g,"ON",1280,145,30,15,10);text(g,"OFF",1349,145,35,15,10);text(g,"SAFE",1288,177,82,18,11);
+    const float reduction=processor.safeReductionDb.load(std::memory_order_relaxed);
+    g.setColour(colour(reduction>0.1f?0xffffb44a:0xff65584a));g.fillEllipse(1280,182,6,6);
+    g.setColour(colour(0xff171c1f));
+    text(g,"0 dB K AUTO",1025,215,220,16,10);text(g,"-1 dBTP",1284,215,90,16,10);
     // Hand-drawn vector script, independent of installed fonts.
     juce::Path signature;
     signature.startNewSubPath(0,22);signature.lineTo(12,2);signature.cubicTo(25,-3,25,7,13,12);signature.lineTo(7,12);

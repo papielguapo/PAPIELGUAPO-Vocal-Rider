@@ -9,12 +9,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout RiderProcessor::makeParamete
     f("speed","Ride time (ms)",50,1500,300,1);
     f("gate","Silence threshold (dBFS)",-80,-20,-50);
     l.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"kmode",1},"K reference",juce::StringArray{"K-12","K-14","K-20"},1));
-    for(auto spec: {std::pair<const char*,const char*>{"power","Power"},{"meterMode","Meter output / ride"},{"fix","FIX: automatic 0 dB K"},{"bypass","Bypass"}})
-        l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{spec.first,1},spec.second,(juce::String(spec.first)=="power"||juce::String(spec.first)=="fix")));
+    for(auto spec: {std::pair<const char*,const char*>{"power","Power"},{"meterMode","Meter output / ride"},{"fix","FIX: automatic 0 dB K"},{"safe","SAFE: true-peak protection"},{"bypass","Bypass"}})
+        l.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{spec.first,1},spec.second,(juce::String(spec.first)=="power"||juce::String(spec.first)=="fix"||juce::String(spec.first)=="safe")));
     return l;
 }
-void RiderProcessor::prepareToPlay(double sr,int){rate=sr;reset();setLatencySamples(0);}
-void RiderProcessor::reset(){energy=outputEnergy=0;ride=gate=0;blend=apvts.getRawParameterValue("power")->load()>0.5f?1.0f:0.0f;currentGrDb=0;currentOutDb=-100;}
+void RiderProcessor::prepareToPlay(double sr,int){rate=sr;safeLimiter.prepare(sr);reset();setLatencySamples(safeLimiter.latency());}
+void RiderProcessor::reset(){energy=outputEnergy=0;ride=gate=0;blend=apvts.getRawParameterValue("power")->load()>0.5f?1.0f:0.0f;currentGrDb=0;currentOutDb=-100;safeReductionDb=0;safeLimiter.reset(apvts.getRawParameterValue("safe")->load()>0.5f);}
 bool RiderProcessor::isBusesLayoutSupported(const BusesLayout& b) const {return b.getMainInputChannelSet()==b.getMainOutputChannelSet()&&(b.getMainOutputChannelSet()==juce::AudioChannelSet::mono()||b.getMainOutputChannelSet()==juce::AudioChannelSet::stereo());}
 void RiderProcessor::processBlock(juce::AudioBuffer<float>& b,juce::MidiBuffer& m){processAudio(b,m,false);}
 void RiderProcessor::processBlockBypassed(juce::AudioBuffer<float>& b,juce::MidiBuffer& m){processAudio(b,m,true);}
@@ -25,6 +25,9 @@ void RiderProcessor::processAudio(juce::AudioBuffer<float>& b,juce::MidiBuffer& 
     const float refs[]{12,14,20};const float ref=refs[juce::jlimit(0,2,juce::roundToInt(v("kmode")))];
     const float target=-ref, up=v("up"),down=v("down"),floor=v("gate");
     const bool active=!hostBypass&&v("bypass")<0.5f&&v("power")>0.5f&&v("fix")>0.5f;
+    const bool safeActive=!hostBypass&&v("bypass")<0.5f&&v("power")>0.5f&&v("safe")>0.5f;
+    float safeMeter=safeReductionDb.load(std::memory_order_relaxed);
+    const float safeMeterRelease=static_cast<float>(std::exp(-1.0/(rate*0.150)));
     const double rmsA=std::exp(-1.0/(rate*0.300));
     const float gainA=static_cast<float>(std::exp(-1.0/(rate*v("speed")*0.001)));
     const float silenceA=static_cast<float>(std::exp(-1.0/(rate*0.8)));
@@ -42,12 +45,16 @@ void RiderProcessor::processAudio(juce::AudioBuffer<float>& b,juce::MidiBuffer& 
             const float a=gate>0?gainA:silenceA;ride=a*ride+(1-a)*wanted;}
         blend=juce::jlimit(0.0f,1.0f,blend+(active?blendStep:-blendStep));
         const float gain=juce::Decibels::decibelsToGain(ride*blend);
-        double out=0;
-        for(int c=0;c<channels;++c){float x=b.getSample(c,n);const float y=blend==0?x:x*gain;b.setSample(c,n,y);out+=static_cast<double>(y)*y;}
+        double out=0;std::array<float,2> frame{};
+        for(int c=0;c<channels;++c){float x=b.getSample(c,n);frame[static_cast<size_t>(c)]=blend==0?x:x*gain;}
+        const float reduction=safeLimiter.process(frame,channels,safeActive);
+        safeMeter=juce::jmax(reduction,safeMeter*safeMeterRelease);
+        for(int c=0;c<channels;++c){const float y=frame[static_cast<size_t>(c)];b.setSample(c,n,y);out+=static_cast<double>(y)*y;}
         outputEnergy=rmsA*outputEnergy+(1-rmsA)*out/channels;
     }
     for(int c=channels;c<b.getNumChannels();++c)b.clear(c,0,b.getNumSamples());
     currentGrDb.store(ride*blend,std::memory_order_relaxed);
+    safeReductionDb.store(safeMeter,std::memory_order_relaxed);
     currentOutDb.store(static_cast<float>(10*std::log10(juce::jmax(outputEnergy,1.0e-20))+3.01029995664),std::memory_order_relaxed);
 }
 juce::AudioProcessorEditor* RiderProcessor::createEditor(){return new RiderEditor(*this);}

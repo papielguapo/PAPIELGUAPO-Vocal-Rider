@@ -11,4 +11,9 @@ PASS session state recall
 PASS target fixed at zero; no output trim
 PASS mono supported
 PASS mono reference
+PASS SAFE -1 dBTP: 24 independent 32x stress measurements
+PASS fixed lookahead latency reported to host
+PASS SAFE off preserves original sample
+PASS SAFE off timing matches host compensation
+PASS SAFE off does not limit peaks
 ALL DSP TESTS PASSED

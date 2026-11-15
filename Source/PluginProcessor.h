@@ -3,6 +3,7 @@
 #include <array>
 #include <atomic>
 #include <cmath>
+#include "SafeLimiter.h"
 
 
 class RiderProcessor final : public juce::AudioProcessor
@@ -22,7 +23,7 @@ public:
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
-    double getTailLengthSeconds() const override { return 0.0; }
+    double getTailLengthSeconds() const override { return safeLimiter.latency()/rate; }
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
     void setCurrentProgram(int) override {}
@@ -33,8 +34,10 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout makeParameters();
     juce::AudioProcessorValueTreeState apvts;
     std::atomic<float> currentGrDb { 0.0f }, currentOutDb { -100.0f };
+    std::atomic<float> safeReductionDb { 0.0f };
     std::atomic<int> editorWidth { 817 }, editorHeight { 126 };
 private:
+    SafeLimiter safeLimiter;
     double rate=44100, energy=0, outputEnergy=0;
     float ride=0, blend=1, gate=0;
     void processAudio(juce::AudioBuffer<float>&, juce::MidiBuffer&, bool);
