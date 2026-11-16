@@ -1,14 +1,14 @@
-Started validating: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
-Random seed: 0x1da6c
+Started validating: C:\Program Files\Common Files\VST3\PAPIELGUAPO - Vocal Rider.vst3
+Random seed: 0x1da6d
 Validation started
 Strictness level: 10
 -----------------------------------------------------------------
-Starting tests in: pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3...
+Starting tests in: pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\PAPIELGUAPO - Vocal Rider.vst3...
 Num plugins found: 1
 
-Testing plugin: VST3-Vocal Rider K-41be935c-60871972
-Papielguapo: Vocal Rider K v1.3.2
-Completed tests in pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\Vocal Rider K.vst3
+Testing plugin: VST3-PAPIELGUAPO - Vocal Rider-844f4dd9-60871972
+Papielguapo: PAPIELGUAPO - Vocal Rider v1.3.3
+Completed tests in pluginval / Scan for plugins located in: C:\Program Files\Common Files\VST3\PAPIELGUAPO - Vocal Rider.vst3
 -----------------------------------------------------------------
 Starting tests in: pluginval / Open plugin (cold)...
 Completed tests in pluginval / Open plugin (cold)
@@ -19,8 +19,8 @@ Completed tests in pluginval / Open plugin (warm)
 -----------------------------------------------------------------
 Starting tests in: pluginval / Plugin info...
 
-Plugin name: Vocal Rider K
-Alternative names: Vocal Rider K
+Plugin name: PAPIELGUAPO - Vocal Rider
+Alternative names: PAPIELGUAPO - Vocal Rider
 SupportsDoublePrecision: no
 Reported latency: 0
 Reported taillength: 0.00219955

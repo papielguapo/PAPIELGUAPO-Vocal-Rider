@@ -44,4 +44,5 @@ PASS cancel preserves original numeric value
 PASS typed values update all remaining parameters
 PASS editor reopens at minimum after enlargement
 Editor opening size: 817 x 126
+PASS OUT RMS uses absolute dBFS target reference
 ALL DSP TESTS PASSED

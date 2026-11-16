@@ -1,14 +1,14 @@
-# Vocal Rider K 1.3.2 — Windows x64
+# PAPIELGUAPO - Vocal Rider 1.3.3 — Windows x64
 
-![Vocal Rider K](Preview.png)
+![PAPIELGUAPO - Vocal Rider](Preview.png)
 
-[Descargar VST3 y Standalone](https://github.com/papielguapo/Vocal-Rider-K/releases/latest)
+[Descargar VST3 y Standalone](https://github.com/papielguapo/PAPIELGUAPO-Vocal-Rider/releases/latest)
 
-Nivelador vocal con TARGET, RANGE, RIDE, TOLERANCE y SILENCE. El objetivo de volumen es ajustable e independiente de la escala K del medidor. La escala K es una referencia de lectura; no es un nivel obligatorio para voces de un género.
+Nivelador vocal con TARGET, RANGE, RIDE, TOLERANCE y SILENCE. El objetivo de volumen es ajustable. OUT usa la misma referencia dBFS RMS que TARGET.
 
 ## Instalación y tamaño
 
-Cierra el DAW y copia la carpeta completa `Binaries/Vocal Rider K.vst3` a `C:\Program Files\Common Files\VST3`. Reescanea y reabre el plugin. No copies solo el binario interior. La aplicación Standalone está en Binaries.
+Cierra el DAW y copia la carpeta completa `Binaries/PAPIELGUAPO - Vocal Rider.vst3` a `C:\Program Files\Common Files\VST3`. Reescanea y reabre el plugin. No copies solo el binario interior. La aplicación Standalone está en Binaries.
 
 Abre siempre a 817 × 126 px. Se puede ampliar hasta 4085 × 630 px, con la misma proporción y límites que FET 67. Arrastra la esquina inferior derecha.
 
@@ -22,19 +22,17 @@ Abre siempre a 817 × 126 px. Se puede ampliar hasta 4085 × 630 px, con la mism
 | TOLERANCE | Tolerancia alrededor de TARGET, de 0 a 3 dB. 0 dB busca el objetivo con precisión; 1.5 dB permite ±1.5 dB; 3 dB conserva variaciones de hasta ±3 dB. Inicial: 0 dB. |
 | SILENCE | Umbral de detección, −80 a −20 dBFS. Evita perseguir señales demasiado bajas; no corta el audio. Inicial: −50 dBFS. |
 | SAFE | A la izquierda de RIDE/OUT. Protección de picos, activada inicialmente. LED morado indica activación y brilla más al atenuar. |
-| RIDE / OUT | Muestra corrección aplicada o nivel RMS de salida relativo a la escala K seleccionada. |
+| RIDE / OUT | Muestra corrección aplicada en dB o nivel medio de salida en dBFS RMS. |
 | RIDER | A la derecha: activa la nivelación automática hacia TARGET. Apagado desactiva el rider, aunque SAFE puede seguir limitando. |
 | POWER | Desactiva el procesamiento y conserva la latencia reportada al host. |
 
 Doble clic en el número bajo una perilla para escribirlo. Enter aplica; Escape cancela. Admite coma decimal y unidades (dB, ms, dBFS). Se limitan los valores fuera de rango y se rechazan entradas inválidas/no finitas. Doble clic sobre el mando restaura su valor inicial.
 
-## Escala K desde el medidor
+## Medidores
 
-Haz **clic derecho sobre el medidor** y elige K-12, K-14 o K-20. Esta selección solo modifica la lectura: **no cambia el objetivo, la ganancia ni el sonido**. Se guarda con la sesión y sigue disponible como parámetro del host.
+OUT muestra el nivel medio de salida en dBFS RMS calibrado con senoide, después de SAFE. Su escala va de −48 a 0 dBFS; el valor numérico puede superar estos límites. TARGET utiliza la misma referencia. RIDE muestra la corrección del nivelador en dB: positivo sube, negativo baja; no incluye SAFE.
 
-Ejemplo: TARGET −18 dBFS equivale a una lectura de −6 K en K-12, −4 K en K-14 y +2 K en K-20. Es la misma señal con escalas diferentes. El encabezado OUTPUT muestra la escala activa.
-
-El detector usa RMS con +3.0103 dB de calibración senoidal, no LUFS ni ponderación K de BS.1770. Una senoide con pico −14 dBFS lee −14 dBFS en este detector. En estéreo se promedia la energía de los canales y se aplica la misma ganancia a ambos. El sistema K original también contempla calibración de monitores: este plugin no calibra tus altavoces. [Referencia de Bob Katz](https://www.digido.com/portfolio-item/level-practices-part-2/).
+El detector RMS integra aproximadamente 300 ms, promedia la energía estéreo y aplica +3.0103 dB de calibración senoidal. Una senoide con pico −14 dBFS lee −14 dBFS. No es un medidor LUFS ni true peak. El LED SAFE brilla más cuando limita. La antigua selección K ya no aparece; su parámetro se conserva internamente para compatibilidad y no modifica el audio.
 
 ## Sidechain musical
 
@@ -50,13 +48,13 @@ SAFE estima picos entre muestras con un FIR de 65 taps a 8x. Protección de −1
 
 TARGET es un objetivo medio, sujeto a RANGE, TOLERANCE, SILENCE, tiempos de respuesta y SAFE. Si SAFE limita, los picos tienen prioridad. El medidor principal es RMS, no true peak. El plugin no clasifica voz frente a respiraciones/ruido y no escribe curvas en la automatización del DAW.
 
-## Cambios 1.3.2
+## Cambios 1.3.3
 
 FIX pasa a llamarse RIDER. El botón conserva su ID interno `fix` y la automatización existente. SENSITIVITY se sustituye por TOLERANCE expresado directamente en dB: `tolerancia = 3 × (1 − sensibilidad/100)`. Por ejemplo, el antiguo 25% se convierte a 2.25 dB; el 100%, a 0 dB. La función de audio es la misma para valores equivalentes. Los estados se convierten automáticamente. Revisa los clips de automatización de SENSITIVITY: ahora se automatiza el parámetro `tolerance` en dB y su sentido es inverso al porcentaje anterior.
 
 ## Presets anteriores
 
-Al cargar un estado sin TARGET, se transforma la antigua referencia K en un objetivo absoluto: K-12 → −12, K-14 → −14, K-20 → −20 dBFS. Los antiguos límites boost/cut se convierten en RANGE usando el menor y TOLERANCE 0 dB. Revisa automatizaciones antiguas: K ahora modifica únicamente el medidor; si quieres mover el nivel, automatiza TARGET.
+Al cargar un estado sin TARGET, se transforma la antigua referencia K en un objetivo absoluto: K-12 → −12, K-14 → −14, K-20 → −20 dBFS. Los antiguos límites boost/cut se convierten en RANGE usando el menor y TOLERANCE 0 dB. Revisa automatizaciones antiguas: K se conserva por compatibilidad y ya no modifica la lectura ni el audio; si quieres mover el nivel, automatiza TARGET.
 
 ## Compilación y validación
 
@@ -64,6 +62,10 @@ C++17, CMake ≥3.22, Visual Studio y JUCE. Configura `Rider_JUCE_PATH` si no es
 
 JUCE usa AGPLv3 o licencia comercial. Según el uso y distribución puede ser necesaria una licencia comercial de JUCE. Se incluye JUCE-LICENSE.md.
 
-## Distribución 1.3.2
+## Distribución 1.3.3
 
 Orden de izquierda a derecha: TARGET → RANGE → RIDE → TOLERANCE → SILENCE. Cada control conserva sus ajustes, unidades, escalas, entrada numérica y automatización.
+
+## Cambios 1.3.3
+
+Nombre de archivo y producto: PAPIELGUAPO - Vocal Rider. Skin: VOCAL RIDER. OUT en dBFS RMS, de −48 a 0; RIDE conserva dB de corrección. Identidad VST3 y parámetros existentes conservados.

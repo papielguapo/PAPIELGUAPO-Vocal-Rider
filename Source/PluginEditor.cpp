@@ -118,7 +118,7 @@ FaceplateComponent::FaceplateComponent(RiderProcessor& p):processor(p)
         const double defaults[]{6,0,300,-50,-14};s.setDoubleClickReturnValue(true,defaults[i]);
         if(i==0)s.setTooltip("RANGE: maximum boost and cut, symmetrically. 6 dB means -6 to +6 dB.");
         if(i==1)s.setTooltip("TOLERANCE: 0 dB follows TARGET precisely; 3 dB preserves variations within +/-3 dB. RIDE controls speed.");
-        if(i==4)s.setTooltip("TARGET: desired average vocal level, -36 to -6 dBFS (sine-calibrated RMS). K scale is selected by right-clicking the meter.");
+        if(i==4)s.setTooltip("TARGET: desired average vocal level, -36 to -6 dBFS (sine-calibrated RMS). OUT displays the same RMS dBFS reference.");
         knobAttachments[i]=std::make_unique<SA>(processor.apvts,ids[i],s);
         auto& value=values[i];addAndMakeVisible(value);value.setName(juce::String(names[i])+" value");
         value.setJustificationType(juce::Justification::centred);value.setFont(font("Arial",12,juce::Font::bold));
@@ -160,27 +160,17 @@ void FaceplateComponent::timerCallback()
     for(size_t i=0;i<values.size();++i)if(!values[i].isBeingEdited())values[i].setText(knobs[i].getTextFromValue(knobs[i].getValue()),juce::dontSendNotification);
     repaint();
 }
-void FaceplateComponent::mouseDown(const juce::MouseEvent& event){
-    if(!event.mods.isPopupMenu()||!juce::Rectangle<float>(1003,38,380,78).contains(event.position))return;
-    const int current=juce::roundToInt(processor.apvts.getRawParameterValue("kmode")->load());
-    juce::PopupMenu menu;menu.addSectionHeader("K meter scale (display only)");
-    menu.addItem(1,"K-12",true,current==0);menu.addItem(2,"K-14",true,current==1);menu.addItem(3,"K-20",true,current==2);
-    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(this),[safe=juce::Component::SafePointer<FaceplateComponent>(this)](int selection){
-        if(!safe||selection<1||selection>3)return;auto* parameter=safe->processor.apvts.getParameter("kmode");
-        parameter->beginChangeGesture();parameter->setValueNotifyingHost(parameter->convertTo0to1(static_cast<float>(selection-1)));parameter->endChangeGesture();
-    });
-}
+void FaceplateComponent::mouseDown(const juce::MouseEvent&) {}
 void FaceplateComponent::paintMeter(juce::Graphics& g){
     g.setColour(colour(0xff08090a));g.fillRoundedRectangle(1003,38,380,78,3);
     const bool out=processor.apvts.getRawParameterValue("meterMode")->load()>0.5f;
-    const float refs[]{12,14,20};const float k=refs[juce::jlimit(0,2,juce::roundToInt(processor.apvts.getRawParameterValue("kmode")->load()))];
-    const float value=out?shownOut+k:shownGr;
-    for(int i=0;i<33;++i){const float db=-24.0f+i;const float x=1013+i*10.9f;
+    const float value=out?shownOut:shownGr;
+    for(int i=0;i<33;++i){const float db=out?-48.0f+1.5f*i:-24.0f+i;const float x=1013+i*10.9f;
         const bool lit=out?value>=db:(value>=0?db>=0&&db<=value:db<=0&&db>=value);
-        const auto c=colour(db>4?0xffff4545:db>=0?0xffffb94b:0xffbb5aff);
+        const auto c=colour(out?(db>=-3?0xffff4545:db>=-12?0xffffb94b:0xffbb5aff):(db>4?0xffff4545:db>=0?0xffffb94b:0xffbb5aff));
         g.setColour(c.withAlpha(lit?1.0f:0.15f));g.fillRect(x,66.0f,8.0f,15.0f);
         if(i%4==0){g.setColour(juce::Colours::white);text(g,juce::String(juce::roundToInt(db)),x-8,87,25,13,9);}}
-    g.setColour(juce::Colours::white);text(g,(out?"OUTPUT K-"+juce::String(juce::roundToInt(k))+" ":"RIDE ")+juce::String(value,1)+(out?" dB K":" dB"),1020,43,345,17,12);
+    g.setColour(juce::Colours::white);text(g,(out?"OUTPUT ":"RIDE ")+juce::String(value,1)+(out?" dBFS RMS":" dB"),1020,43,345,17,12);
 }
 
 void FaceplateComponent::paint(juce::Graphics& g)
@@ -216,7 +206,7 @@ void FaceplateComponent::paint(juce::Graphics& g)
     for(auto point:{juce::Point<float>(165,53),{165,198},{1417,53},{1417,198}})screw(g,point.x,point.y);
     g.setColour(colour(0xff15191b));g.setFont(font("Arial Black",18,juce::Font::bold));
     g.drawText("VOCAL",68,121,104,23,juce::Justification::centredLeft);
-    g.setColour(colour(0xff15191b));text(g,"RIDER K",68,146,104,15,10);
+    g.setColour(colour(0xff15191b));text(g,"RIDER",68,146,104,15,10);
     lamp(g,{206,32,60,60},processor.apvts.getRawParameterValue("power")->load()>0.5f);
     g.setColour(colour(0xff171c1f));text(g,"POWER",197,102,78,18,14);
     text(g,"ON",176,145,35,17,11);text(g,"OFF",258,145,35,17,11);

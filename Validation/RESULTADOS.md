@@ -1,14 +1,14 @@
-# Vocal Rider K 1.3.2 — Auditoría
+# PAPIELGUAPO - Vocal Rider 1.3.3 — Auditoría
 
-Versión Windows x64 con RANGE simétrico, TOLERANCE y sidechain musical opcional sin controles nuevos en la skin. Sin sidechain, RIDER busca TARGET ajustable. La escala K es solo de medición. Se conservan SAFE y las escalas impresas; no hay TRIM.
+Versión Windows x64 con RANGE simétrico, TOLERANCE y sidechain musical opcional sin controles nuevos en la skin. Sin sidechain, RIDER busca TARGET ajustable. OUT mide dBFS RMS; RIDE mide dB de corrección. Se conservan SAFE y las escalas impresas; no hay TRIM.
 
 ## Compilación e instalación
 
-Release MSVC x64: VST3 y Standalone compilados correctamente. Instalado en C:/Program Files/Common Files/VST3/Vocal Rider K.vst3. SHA-256 del binario instalado idéntico al del paquete: `5b22a9f7c3eb7461db236fde9db72ae546aa1de36d2108d6b073935bc575328d`.
+Release MSVC x64: VST3 y Standalone compilados correctamente. Instalado en C:/Program Files/Common Files/VST3/PAPIELGUAPO - Vocal Rider.vst3. SHA-256 del binario instalado idéntico al del paquete: `544d759b5784bf4032ed0a93ac36afcc80863bb74fdeb5e2e525828ac3ae9762`.
 
 ## Pluginval
 
-pluginval 1.0.4, nivel de exigencia 10, semilla 121452, ejecutado sobre la copia instalada en Common Files/VST3 de la versión 1.3.2: **SUCCESS, salida 0**. Sin excluir pruebas de GUI. Tasas 44100/48000/96000 Hz y bloques 64/128/256/512/1024. Incluye automatización y fuzzing de parámetros. Log íntegro en pluginval-level10.txt.
+pluginval 1.0.4, nivel de exigencia 10, semilla 121453, ejecutado sobre la copia instalada en Common Files/VST3 de la versión 1.3.3: **SUCCESS, salida 0**. Sin excluir pruebas de GUI. Tasas 44100/48000/96000 Hz y bloques 64/128/256/512/1024. Incluye automatización y fuzzing de parámetros. Log íntegro en pluginval-level10.txt.
 
 ## Audio
 
@@ -24,7 +24,7 @@ RIDER conserva el ID interno fix. TOLERANCE se expresa en dB (0–3) y sustituye
 
 ## TARGET y medición independiente
 
-TARGET sustituye al selector K en la perilla: −36 a −6 dBFS RMS. La selección K se mueve al menú contextual del medidor y no afecta al DSP. Pruebas aprobadas para convergencia a −24/−18/−12 dBFS y para independencia entre escala K y nivel de audio. Migración de estado antiguo K-20 verificada a TARGET −20 dBFS. RIDE tiene recorte a 0.5× y subida a 1.5× el tiempo indicado.
+TARGET sustituye al selector K en la perilla: −36 a −6 dBFS RMS. OUT muestra dBFS RMS absolutos, con escala de −48 a 0 y sin menú K. El parámetro K antiguo se conserva por compatibilidad y no afecta al DSP. Pruebas aprobadas para convergencia a −24/−18/−12 dBFS y para independencia entre escala K y nivel de audio. Migración de estado antiguo K-20 verificada a TARGET −20 dBFS. RIDE tiene recorte a 0.5× y subida a 1.5× el tiempo indicado.
 
 ## RANGE, TOLERANCE y sidechain
 
@@ -32,11 +32,11 @@ Pruebas aprobadas para rango simétrico y rango cero, tolerancia de 3 dB que con
 
 Bus auxiliar mono/estéreo opcional probado: aprendizaje inicial, seguimiento de +4/−4 dB del instrumental, vuelta al TARGET ante silencio/desconexión, sin latencia extra y sin sobrescribir las muestras del bus auxiliar. El seguimiento queda limitado a ±6 dB alrededor del TARGET. El objetivo depende del instrumental cuando está conectado. No se ha comprobado el enrutado dentro de una sesión real de FL Studio.
 
-## Entrada numérica 1.3.2
+## Entrada numérica 1.3.3
 
 Doble clic en los valores bajo las perillas para editarlos. Enter aplica y Escape cancela. Se admiten coma decimal y unidades. Los valores se limitan al rango válido; texto no numérico y valores no finitos se descartan. TARGET acepta valores numéricos en dBFS. La escala K se elige desde el menú contextual del medidor.
 
-## Escalado 1.3.2
+## Escalado 1.3.3
 
 Mismos límites que FET 67: 817 × 126 px hasta 4085 × 630 px, con proporción fija. Siempre abre al mínimo. Captura inicial en Preview-Min.png.
 
@@ -46,6 +46,6 @@ SAFE pasa a la izquierda de RIDE/OUT; RIDER pasa a la derecha. SAFE incorpora LE
 
 ## Interfaz y límites de la auditoría
 
-Preview.png renderizada y revisada. Orden visual: TARGET → RANGE → RIDE → TOLERANCE → SILENCE. Escalas situadas según la posición real de los parámetros. SAFE y RIDER arrancan encendidos; LED morado lateral indica SAFE activo y aumenta de brillo al limitar. El medidor principal sigue siendo RMS K.
+Preview.png renderizada y revisada. Orden visual: TARGET → RANGE → RIDE → TOLERANCE → SILENCE. Escalas situadas según la posición real de los parámetros. SAFE y RIDER arrancan encendidos; LED morado lateral indica SAFE activo y aumenta de brillo al limitar. El medidor OUT muestra dBFS RMS de −48 a 0; RIDE conserva dB de corrección.
 
 Las pruebas son offline con señales sintéticas y un host de validación; no se ha comprobado abriendo una sesión real en FL Studio. El nivel medio de 0 dB K está sujeto a límites, umbral y tiempos de respuesta; SAFE puede reducirlo para dar prioridad a los picos. FL Studio debe volver a escanear/reabrir el plugin para cargar el binario actualizado.
